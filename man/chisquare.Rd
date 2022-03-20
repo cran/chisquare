@@ -2,32 +2,49 @@
 % Please edit documentation in R/chisquare.R
 \name{chisquare}
 \alias{chisquare}
-\title{R function for chi-square test of independence}
+\title{R function for chi-square and G-square test of independence, measures of association, and standardized/adjusted standardized
+residuals}
 \usage{
-chisquare(data, B = 999, format = "short")
+chisquare(
+  data,
+  B = 999,
+  adj.alpha = FALSE,
+  format = "short",
+  graph = FALSE,
+  tfs = 14
+)
 }
 \arguments{
 \item{data}{Dataframe containing the input contingency table.}
 
 \item{B}{Number of simulated tables to be used to calculate the Monte Carlo-based p value (999 by default).}
 
+\item{adj.alpha}{Takes TRUE or FALSE (defult) if the user wants or does not want the significance level of the
+residuals (both standarized and adjusted standardized) to be corrected using the Sidak's adjustment method (see Details).}
+
 \item{format}{Takes \emph{short} (default) if the dataset is a dataframe storing a contingency table; if the
 input dataset is a dataframe storing two columns that list the levels of the two categorical variables,
 \emph{long} will preliminarily cross-tabulate the levels of the categorical variable in the 1st column against
 the levels of the variable stored in the 2nd column.}
+
+\item{graph}{Takes TRUE or FALSE (default) if the user wants or does not want to chart the distribution of the permuted
+chi-square statistic accross the number of randomized tables set by the B parameter.}
+
+\item{tfs}{Numerical value to set the size of the font used in the main body of the various output tables (14 by default).}
 }
 \value{
-The function produces a number of \strong{output tables}, which are nicely formatted with the help of the
-\code{\link[formattable]{formattable}} function out from the the \emph{formattable} package.
+The function produces an \strong{optional chart} (distribution of the permuted chi-square statistic), and
+a number of \strong{output tables} that are nicely formatted with the help of the \emph{gt} package.
 The output tables are listed below:
 
  \itemize{
   \item Input contingency table
   \item Expected frequencies
   \item Cells' chi-square value
-  \item Cells' contribution (in percent) to the chi-square statistic (cells in blue feature a larger-than-average
+  \item Cells' relative contribution (in percent) to the chi-square statistic (cells in RED feature a larger-than-average
   contribution)
-  \item Standardized residuals (RED for residuals smaller than -1.96, GREEN for residuals larger than +1.96)
+  \item Cells' absolute contribution (in percent) to the chi-square statistic (colour same as above)
+  \item Standardized residuals (RED for large significant residuals, BLUE for small significant residuals)
   \item Adjusted standardized residuals (colour same as above)
   \item Table of output statistics, p values, and association measures
 }
@@ -37,26 +54,41 @@ Also, the function returns a \strong{list containing the following elements}:
   \item \emph{crosstab}: input contingency table
   \item \emph{exp.freq.}: table of expected frequencies
   \item \emph{chisq.values}: cells' chi-square value
-  \item \emph{chisq.contrib.}: cells' contribution (in percent) to the chi-square statistic
+  \item \emph{chisq.relat.contrib.}: cells' relative contribution (in percent) to the chi-square statistic
+  \item \emph{chisq.abs.contrib.}: cells' absolute contribution (in percent) to the chi-square statistic
   \item \emph{chisq.statistic}: observed chi-square value
-  \item \emph{chisq.p.value}: p value
+  \item \emph{chisq.p.value}: p value of the chi-square statistic
   \item \emph{chisq.p.value.perm.}: p value based on B permuted tables
+  \item \emph{Gsq.statistic}: observed G-square value
+  \item \emph{Gsq.p.value}: p value of the G-square statistic
   \item \emph{stand.resid.}: table of standardized residuals
   \item \emph{adj.stand.resid.}: table of adjusted standardized residuals
   \item \emph{Phi}: Phi coefficient (only for 2x2 tables)
   \item \emph{Phi signed}: signed Phi coefficient (only for 2x2 tables)
   \item \emph{Yule's Q}: Q coefficient (only for 2x2 tables)
+  \item \emph{Odds ratio}: odds ratio (only for 2x2 tables)
+  \item \emph{Odds ratio CI lower boundary}: lower boundary of the 95perc CI
+  \item \emph{Odds ratio CI upper boundary}: upper boundary of the 95perc CI
+  \item \emph{Odds ratio p.value}: p value of the odds ratio
   \item \emph{Cadj}: adjusted contigency coefficient C
   \item \emph{Cramer's V}: Cramer's V coefficient
   \item \emph{Cramer's Vbc}: bias-corrected Cramer's V coefficient
   \item \emph{w}: Cohen's w
   \item \emph{lambda (rows dep.)}: Goodman-Kruskal's lambda coefficient (considering the rows being the dependent variable)
   \item \emph{lambda (cols dep.)}: Goodman-Kruskal's lambda coefficient (considering the columns being the dependent variable)
+  \item \emph{lambda.symmetric}: Goodman-Kruskal's symmetric lambda coefficient
+  \item \emph{tau}: Goodman-Kruskal's tau coefficient
   \item \emph{gamma}: Goodman-Kruskal's gamma coefficient
   \item \emph{gamma.p.value}: 2-sided p value for the Goodman-Kruskal's gamma coefficient
+  \item \emph{k}: Cohen'k
+  \item \emph{k CI lower boundary}: lower boundary of the 95perc CI
+  \item \emph{k CI upper boundary}: upper boundary of the 95perc CI
 }
 
-The following examples, using in-built datasets, can be run to fimiliarise with the function:\cr
+\strong{Note} that the \emph{p values} returned in the above list are expressed in scientific notation, whereas the ones reported in the
+output table featuring the tests' result and measures of association are reported as broken down into classes (e.g., <0.05, or <0.01, etc).\cr
+
+The \strong{following examples}, which use in-built datasets, can be run to fimiliarise with the function:\cr
 
 -perform the test on the in-built 'social_class' dataset\cr
 result <- chisquare(social_class)\cr
@@ -76,14 +108,15 @@ OPINION=c(rep("oppose", 235),\cr
          rep("oppose", 160),\cr
          rep("favour", 180)))\cr
 
--perform the test, specifying that the input table is in 'long' format\cr
+-perform the test specifying that the input table is in 'long' format\cr
 result <- chisquare(mytable, format="long")\cr
 }
 \description{
-The function performs the chi-square test of independence on the input contingency table,
-calculates various measures of categorical association, and returns standardized and adjusted
-standardized residuals. The p value associated to the chi-square statistic is also calculated on the basis
-of a permutation-based procedure. Nicely-formatted output tables are rendered.
+The function performs the chi-square (and the G-square) test of independence on the input contingency table,
+calculates various measures of categorical association, returns standardized and adjusted
+standardized residuals (with indication of their significance), and calculates relative and absolute contributions to the chi-square.
+The p value associated to the chi-square statistic is also calculated on the basis of a permutation-based procedure.
+Nicely-formatted output tables are rendered.
 }
 \details{
 The following \strong{measures of categorical associations} are produced by the function:
@@ -91,20 +124,24 @@ The following \strong{measures of categorical associations} are produced by the 
   \item Phi (only for 2x2 tables)
   \item Phi signed (only for 2x2 tables)
   \item Yule's Q (only for 2x2 tables)
+  \item Odds ratio (only for 2x2 tables)
   \item Adjusted contingency coefficient C
-  \item Cramer's V
-  \item Bias-corrected Cramer's V
-  \item Cohen's w
+  \item Cramer's V (with indication of the magnitude of the effect size according to Cohen, up to 5 degrees of freedom)
+  \item Bias-corrected Cramer's V (with indication of the magnitude of the effect size according to Cohen, up to 5 degrees of freedom)
+  \item Cohen's w (with indication of the magnitude of the effect size)
   \item Goodman-Kruskal's lambda (asymmetric)
+  \item Goodman-Kruskal's lambda (symmetric)
+  \item Goodman-Kruskal's tau
   \item Goodman-Kruskal's gamma
+  \item Cohen's k
 }
 
-The \strong{p value} of the observed chi-square statistic is also calculated on the basis of a permutation-based approach,
-using B random tables created under the Null Hypothesis of independence. For the rationale of this approach,
+The \strong{p value} of the observed chi-square statistic is also calculated on the basis of a \strong{permutation-based approach},
+using \emph{B} random tables created under the Null Hypothesis of independence. For the rationale of this approach,
 see for instance the description in Beh E.J., Lombardo R. 2014, Correspondence Analysis: Theory, Practice
-and New Strategies, Chichester, Wiley, pages 62-64.\cr
+and New Strategies, Chichester, Wiley: 62-64.\cr
 
-The \strong{randomized p value} is calculated as follows: \cr
+The \strong{permutation-based p value} is calculated as follows: \cr
 \eqn{(1 + sum (chistat.perm > chisq.stat)) / (1 + B)}, where
 \emph{chistat.perm} is a vector storing the B chi-square statistics generated under the Null Hypothesis, and
 \emph{chisq.stat} is the observed chi-square statistic. For the logic of the calculation, see for example
@@ -117,7 +154,27 @@ The \strong{adjusted standardized residuals} are calculated as follows: \cr
 been demonstrated that the standardized residuals tend to underestimate the significance of differences in small samples.
 The adjusted standardized residuals correct that deficiency.\cr
 
-The \strong{bias-corrected Cramer's V} is based on Bergsma, Wicher (2013).
+The \strong{significance of the residuals} (both standardized and adjusted standardized) is assessed using alpha 0.05 or, optionally
+(by setting the parameter 'adj.alpha' to TRUE),
+using an adjusted alpha calculated using the Sidak's method:\cr
+\eqn{alpha.adj = 1-(1 - 0.05)^(1/(nr*nc))}, where \emph{nr} and \emph{nc} are the number of rows and columns in the table respectively. The adjusted
+alpha is then converted into a critical two-tailed z value. See: Beasley TM and Schumacker RE (1995), Multiple Regression Approach to Analyzing Contingency
+Tables: Post Hoc and Planned Comparison Procedures, The Journal of Experimental Education, 64(1): 86, 89.
+
+The \strong{cells' relative contribution (in percent) to the chi-square statistic} is calculated as:\cr
+\eqn{chisq.values / chisq.stat * 100}, where \emph{chisq.values} and \emph{chisq.stat} are the chi-square
+value in each individual cell of the table and the value of the chi-square statistic, respectively. The
+\emph{average contribution} is calculated as \eqn{100 / (nr*nc)}, where \emph{nr} and \emph{nc} are the
+number of rows and columns in the table respectively.\cr
+
+The \strong{cells' absolute contribution (in percent) to the chi-square statistic} is calculated as:\cr
+\eqn{chisq.values / n * 100}, where \emph{chisq.values} and \emph{n} are the chi-square
+value in each individual cell of the table and the table's grant total, respectively. The
+\emph{average contribution} is calculated as sum of all the absolute contributions divided by the number of cells in
+the table. For both the relative and absolute contributions to the chi-square, see
+Beasley and Schumacker (1995): 90.\cr
+
+The \strong{bias-corrected Cramer's V} is based on Bergsma, W. (2013).
 "A bias correction for Cramér's V and Tschuprow's T". Journal of the Korean Statistical Society. 42 (3): 323–328,
 https://doi.org/10.1016%2Fj.jkss.2012.10.002\cr
 
@@ -125,9 +182,27 @@ For the \strong{other measures of categorical association} provided by the funct
 Sheskin, D. J. (2011). Handbook of Parametric and Nonparametric Statistical Procedures, Fifth Edition (5th ed.). Chapman and Hall/CRC: 675-679,
 1415-1427.\cr
 
-\strong{Note} that the \emph{Phi} coefficient is based on the chi-square statistic as per Sheskin's equation 16.21, whereas the
-\emph{Phi signed} is after Sheskin's equation 16.20. The \emph{2-tailed} p value of \emph{Goodman-Kruskal's gamma} is based on the
-associated z-score calculated as per Sheskin's equation 32.2.
+\strong{Note} that:\cr
+-the \strong{Phi} coefficient is based on the chi-square statistic as per Sheskin's equation 16.21, whereas the
+\strong{Phi signed} is after Sheskin's equation 16.20;\cr
+
+-\strong{Cohen's w} is calculate as \eqn{V * sqrt(min(nr, nc)-1)}, where \emph{V} is Cramer's V, and  \emph{nr} and  \emph{nc}
+are the number of rows and columns respectively; see Sheskin 2011: 679;\cr
+
+-in the output table reporting the result of the chi-square test and the various measures of association, the
+magnitude of the \strong{effect size} according to \emph{Cohen}'s guidelines is reported for Cramer's V, Cramer's V biase-corrected, and for Cohen's w;
+the effect size for the former two coefficients is only reported for tables featuring up to 5 degrees of freedom
+(see Cohen, J. (1988). Statistical power analysis for the behavioral sciences (2nd ed). Hillsdale, N.J: L. Erlbaum Associates);\cr
+
+-the \strong{2-tailed p value} of \strong{Goodman-Kruskal's gamma} is based on the
+associated z-score calculated as per Sheskin's equation 32.2;\cr
+
+-the \strong{symmetric} version of \strong{Goodman-Kruskal's lambda} is calculated
+as per Reynolds, H. T. (1984). Analysis of Nominal Data (Quantitative Applications in the Social Sciences) (1st ed.). SAGE Publications: 55-57;\cr
+
+-\strong{Goodman-Kruskal's tau} is calculated as per Reynolds 1984: 57-60;\cr
+
+-\strong{Cohen's k} is calculated as per Sheskin 2011: 688-689 (equation 16.30).
 }
 \examples{
 #perform the test on the in-built 'diseases' dataset
