@@ -1,8 +1,8 @@
-#' R function for chi-square and G-square test of independence, measures of association, and standardized/adjusted standardized
-#' residuals
+#' R function for chi-square and G-square test of independence, measures of association, and standardized/moment-corrected
+#' standardized/adjusted standardized residuals
 #'
 #' The function performs the chi-square (and the G-square) test of independence on the input contingency table,
-#' calculates various measures of categorical association, returns standardized and adjusted
+#' calculates various measures of categorical association, returns standardized, moment-corrected standardized, and adjusted
 #' standardized residuals (with indication of their significance), and calculates relative and absolute contributions to the chi-square.
 #' The p value associated to the chi-square statistic is also calculated on the basis of a permutation-based procedure.
 #' Nicely-formatted output tables are rendered.
@@ -11,17 +11,17 @@
 #'  \itemize{
 #'   \item Phi (only for 2x2 tables)
 #'   \item Phi signed (only for 2x2 tables)
-#'   \item Yule's Q (only for 2x2 tables)
-#'   \item Odds ratio (only for 2x2 tables)
+#'   \item Yule's Q (and p value; only for 2x2 tables)
+#'   \item Odds ratio (with 95perc confidence interval and p value; only for 2x2 tables)
 #'   \item Adjusted contingency coefficient C
-#'   \item Cramer's V (with indication of the magnitude of the effect size according to Cohen, up to 5 degrees of freedom)
-#'   \item Bias-corrected Cramer's V (with indication of the magnitude of the effect size according to Cohen, up to 5 degrees of freedom)
+#'   \item Cramer's V (with 95perc confidence interval; indication of the magnitude of the effect size according to Cohen is provided for tables with up to 5 degrees of freedom)
+#'   \item Bias-corrected Cramer's V (indication of the magnitude of the effect size according to Cohen is provided for tables with up to 5 degrees of freedom)
 #'   \item Cohen's w (with indication of the magnitude of the effect size)
 #'   \item Goodman-Kruskal's lambda (asymmetric)
 #'   \item Goodman-Kruskal's lambda (symmetric)
-#'   \item Goodman-Kruskal's tau
-#'   \item Goodman-Kruskal's gamma
-#'   \item Cohen's k
+#'   \item Goodman-Kruskal's tau (asymmetric)
+#'   \item Goodman-Kruskal's gamma (and p value)
+#'   \item Cohen's k (and 95perc confidence interval)
 #' }
 #'
 #' The \strong{p value} of the observed chi-square statistic is also calculated on the basis of a \strong{permutation-based approach},
@@ -35,6 +35,11 @@
 #' \emph{chisq.stat} is the observed chi-square statistic. For the logic of the calculation, see for example
 #' Baddeley et al., "Spatial Point Patterns. Methodology and Applications with R", CRC Press 2016: 387.\cr
 #'
+#' The \strong{moment-corrected standardized residuals} are calculated as follows: \cr
+#' \eqn{stand.res / (sqrt((nr-1)*(nc-1)/(nr*nc)))}, where \emph{stand.res} is each cell's standardized residual, \emph{nr} and
+#' \emph{nc} are the number of rows and columns respectively; see
+#' Garcia-Perez, MA, and Nunez-Anton, V (2003). Cellwise Residual Analysis in Two-Way Contingency Tables. Educational and Psychological Measurement, 63(5): 827.\cr
+#'
 #' The \strong{adjusted standardized residuals} are calculated as follows: \cr
 #' \eqn{stand.res[i,j] / sqrt((1-sr[i]/n)*(1-sc[j]/n))}, where \emph{stand.res} is the standardized residual for cell \emph{ij},
 #' \emph{sr} is the row sum for row \emph{i}, \emph{sc} is the column sum for column \emph{j}, and
@@ -42,7 +47,7 @@
 #' been demonstrated that the standardized residuals tend to underestimate the significance of differences in small samples.
 #' The adjusted standardized residuals correct that deficiency.\cr
 #'
-#' The \strong{significance of the residuals} (both standardized and adjusted standardized) is assessed using alpha 0.05 or, optionally
+#' The \strong{significance of the residuals} (standardized, moment-corrected standardized, and adjusted standardized) is assessed using alpha 0.05 or, optionally
 #' (by setting the parameter 'adj.alpha' to TRUE),
 #' using an adjusted alpha calculated using the Sidak's method:\cr
 #' \eqn{alpha.adj = 1-(1 - 0.05)^(1/(nr*nc))}, where \emph{nr} and \emph{nc} are the number of rows and columns in the table respectively. The adjusted
@@ -62,6 +67,10 @@
 #' the table. For both the relative and absolute contributions to the chi-square, see
 #' Beasley and Schumacker (1995): 90.\cr
 #'
+#' The calculation of the \strong{95perc confidence interval around Cramer's V} is based on Smithson M.J. (2003). Confidence Intervals,
+#' Quantitative Applications in the Social Sciences Series, No. 140. Thousand Oaks, CA: Sage, 39-41, and builds on the R code made
+#' available by the author on the web (http://www.michaelsmithson.online/stats/CIstuff/CI.html).\cr
+#'
 #' The \strong{bias-corrected Cramer's V} is based on Bergsma, W. (2013).
 #' "A bias correction for Cramér's V and Tschuprow's T". Journal of the Korean Statistical Society. 42 (3): 323–328,
 #' https://doi.org/10.1016%2Fj.jkss.2012.10.002\cr
@@ -73,6 +82,8 @@
 #' \strong{Note} that:\cr
 #' -the \strong{Phi} coefficient is based on the chi-square statistic as per Sheskin's equation 16.21, whereas the
 #' \strong{Phi signed} is after Sheskin's equation 16.20;\cr
+#'
+#' -the \strong{2-sided p value of Yule's Q} is calculated following Sheskin's equation 16.24;\cr
 #'
 #' -\strong{Cohen's w} is calculate as \eqn{V * sqrt(min(nr, nc)-1)}, where \emph{V} is Cramer's V, and  \emph{nr} and  \emph{nc}
 #' are the number of rows and columns respectively; see Sheskin 2011: 679;\cr
@@ -113,13 +124,14 @@
 #' The output tables are listed below:
 #'
 #'  \itemize{
-#'   \item Input contingency table
+#'   \item Input contingency table (with some essential analytical results annotated at the bottom)
 #'   \item Expected frequencies
 #'   \item Cells' chi-square value
 #'   \item Cells' relative contribution (in percent) to the chi-square statistic (cells in RED feature a larger-than-average
 #'   contribution)
 #'   \item Cells' absolute contribution (in percent) to the chi-square statistic (colour same as above)
 #'   \item Standardized residuals (RED for large significant residuals, BLUE for small significant residuals)
+#'   \item Moment-corrected standardized residuals (colour same as above)
 #'   \item Adjusted standardized residuals (colour same as above)
 #'   \item Table of output statistics, p values, and association measures
 #' }
@@ -137,22 +149,27 @@
 #'   \item \emph{Gsq.statistic}: observed G-square value
 #'   \item \emph{Gsq.p.value}: p value of the G-square statistic
 #'   \item \emph{stand.resid.}: table of standardized residuals
+#'   \item \emph{mom.corr.stand.resid.}: table of moment-corrected standardized residuals
 #'   \item \emph{adj.stand.resid.}: table of adjusted standardized residuals
 #'   \item \emph{Phi}: Phi coefficient (only for 2x2 tables)
 #'   \item \emph{Phi signed}: signed Phi coefficient (only for 2x2 tables)
 #'   \item \emph{Yule's Q}: Q coefficient (only for 2x2 tables)
+#'   \item \emph{Yule's Q p.value}: 2-tailed p value of Yule's Q
 #'   \item \emph{Odds ratio}: odds ratio (only for 2x2 tables)
 #'   \item \emph{Odds ratio CI lower boundary}: lower boundary of the 95perc CI
 #'   \item \emph{Odds ratio CI upper boundary}: upper boundary of the 95perc CI
 #'   \item \emph{Odds ratio p.value}: p value of the odds ratio
 #'   \item \emph{Cadj}: adjusted contigency coefficient C
 #'   \item \emph{Cramer's V}: Cramer's V coefficient
+#'   \item \emph{Cramer's V CI lower boundary}: lower boundary of the 95perc CI
+#'   \item \emph{Cramer's V CI upper boundary}: upper boundary of the 95perc CI
 #'   \item \emph{Cramer's Vbc}: bias-corrected Cramer's V coefficient
 #'   \item \emph{w}: Cohen's w
 #'   \item \emph{lambda (rows dep.)}: Goodman-Kruskal's lambda coefficient (considering the rows being the dependent variable)
 #'   \item \emph{lambda (cols dep.)}: Goodman-Kruskal's lambda coefficient (considering the columns being the dependent variable)
 #'   \item \emph{lambda.symmetric}: Goodman-Kruskal's symmetric lambda coefficient
-#'   \item \emph{tau}: Goodman-Kruskal's tau coefficient
+#'   \item \emph{tau (rows dep.)}: Goodman-Kruskal's tau coefficient (considering the rows being the dependent variable)
+#'   \item \emph{tau (cols dep.)}: Goodman-Kruskal's tau coefficient (considering the columns being the dependent variable)
 #'   \item \emph{gamma}: Goodman-Kruskal's gamma coefficient
 #'   \item \emph{gamma.p.value}: 2-sided p value for the Goodman-Kruskal's gamma coefficient
 #'   \item \emph{k}: Cohen'k
@@ -324,8 +341,18 @@ chisquare <- function(data, B=999, adj.alpha=FALSE, format="short", graph=FALSE,
   #Yule's Q
   if (nr==2 & nc==2) {
     Q <- round(((df[1,1]*df[2,2]) - (df[1,2]*df[2,1])) /  ((df[1,1]*df[2,2]) + (df[1,2]*df[2,1])),3)
+    Q.z <- Q / sqrt((1/4)*(1-Q^2)^2*(1/df[1,1]+1/df[1,2]+1/df[2,1]+1/df[2,2]))
+    Q.p <- as.numeric(format(2*pnorm(q=abs(Q.z), lower.tail=FALSE), scientific=T))
+    Q.p.to.report <- ifelse(Q.p < 0.001, "< 0.001",
+                            ifelse(Q.p < 0.01, "< 0.01",
+                                   ifelse(Q.p < 0.05, "< 0.05",
+                                          round(Q.p, 3))))
+
+    report.of.Q <- paste0(Q, " (p: ", Q.p.to.report, ")")
   } else {
     Q <- "-"
+    Q.p <- "-"
+    report.of.Q <- "-"
   }
 
   #adjusted contingency coeffcient
@@ -368,6 +395,59 @@ chisquare <- function(data, B=999, adj.alpha=FALSE, format="short", graph=FALSE,
     V.effect.size.to.report <- ""
   }
 
+  #95percent CI around Cramer's V
+  #fuction to calculate Delta Lower (after Smithson)
+  lochi <- function(chival,df,conf){
+    ulim <- 1 - (1-conf)/2
+    lc <- c(.001,chival/2,chival)
+    while(pchisq(chival,df,lc[1])<ulim) {
+      if(pchisq(chival,df)<ulim)
+        return(c(0,pchisq(chival,df)))
+      lc <- c(lc[1]/4,lc[1],lc[3])
+    }
+    diff <- 1
+    while(diff > .00001) {
+      if(pchisq(chival,df,lc[2])<ulim)
+        lc <- c(lc[1],(lc[1]+lc[2])/2,lc[2])
+      else lc <- c(lc[2],(lc[2]+lc[3])/2,lc[3])
+      diff <- abs(pchisq(chival,df,lc[2]) - ulim)
+      ucdf <- pchisq(chival,df,lc[2])
+    }
+    c(lc[2],ucdf)
+  }
+  #fuction to calculate Delta Upper (after Smithson)
+  hichi <- function(chival,df,conf){
+    uc <- c(chival,2*chival,3*chival)
+    llim <- (1-conf)/2
+    while(pchisq(chival,df,uc[1])<llim) {
+      uc <- c(uc[1]/4,uc[1],uc[3])
+    }
+    while(pchisq(chival,df,uc[3])>llim) {
+      uc <- c(uc[1],uc[3],uc[3]+chival)
+    }
+    diff <- 1
+    while(diff > .00001) {
+      if(pchisq(chival,df,uc[2])<llim)
+        uc <- c(uc[1],(uc[1]+uc[2])/2,uc[2])
+      else uc <- c(uc[2],(uc[2]+uc[3])/2,uc[3])
+      diff <- abs(pchisq(chival,df,uc[2]) - llim)
+      lcdf <- pchisq(chival,df,uc[2])
+    }
+    c(uc[2],lcdf)
+  }
+
+  #put the above functions to work to get delta.lower and delta.upper
+  delta.lower <- lochi(chival=chisq.stat, df=degrees.of.f, conf=0.95)[1]
+  delta.upper <- hichi(chival=chisq.stat, df=degrees.of.f, conf=0.95)[1]
+
+  #calculate the lower and upper limit for the 95% CI around V (after Smithson)
+  V.lower <- round(sqrt((delta.lower + degrees.of.f) / (n * (min(nr, nc)-1))),3)
+  V.upper <- round(sqrt((delta.upper + degrees.of.f) / (n * (min(nr, nc)-1))),3)
+
+  #create a vector to store the results to be later reported in the output table
+  report.of.V <- paste0(V, " (95% CI ", V.lower,"-", V.upper, ")")
+
+
   #bias-corrected Cramer's V
   phi.new <- max(0, (chisq.stat / n) - ((nc-1)*(nr-1)/(n-1)))
   k.new  <-  nc-((nc-1)^2 / (n-1))
@@ -409,6 +489,7 @@ chisquare <- function(data, B=999, adj.alpha=FALSE, format="short", graph=FALSE,
   } else{
     Vbc.effect.size.to.report <- ""
   }
+
 
   #Cohen's w
   w <- round(V * sqrt(min(nr, nc)-1),3)
@@ -465,14 +546,20 @@ chisquare <- function(data, B=999, adj.alpha=FALSE, format="short", graph=FALSE,
                                       round(gamma.p,3))))
 
   #Goodman-Kruskal's tau
-  tot.n.errors.rowwise <- sum(((n-sr)/n)*sr)
-  errors.col.wise <- matrix(nrow=nr, ncol=nc)
-  for (i in 1:nr) {
-    for (j in 1:nc) {
-      errors.col.wise[i,j] <- ((sc[j] - df[i,j]) / sc[j]) * df[i,j]
+  calc.tau <- function(x){
+  tot.n.errors.rowwise <- sum(((sum(x)-rowSums(x))/sum(x))*rowSums(x))
+  errors.col.wise <- matrix(nrow=nrow(x), ncol=ncol(x))
+  for (i in 1:nrow(x)) {
+    for (j in 1:ncol(x)) {
+      errors.col.wise[i,j] <- ((colSums(x)[j] - x[i,j]) / colSums(x)[j]) * x[i,j]
     }
   }
   tau <- round((tot.n.errors.rowwise - sum(errors.col.wise)) / tot.n.errors.rowwise, 3)
+  return(tau)
+  }
+
+  tau.row.dep <- calc.tau(t(df))
+  tau.col.dep <- calc.tau(df)
 
   #Odds ratio
   if (nr==2 & nc==2) {
@@ -509,6 +596,9 @@ chisquare <- function(data, B=999, adj.alpha=FALSE, format="short", graph=FALSE,
 
   #standardized residuals
   stand.res <- round((df - exp.freq) / sqrt(exp.freq), 3)
+
+  #moment-corrected standardized residuals
+  mom.corr.stand.res <- round(stand.res / (sqrt((nr-1)*(nc-1)/(nr*nc))),3)
 
   #create a copy of the previous dataframe to be populated
   #with the values of the adjusted standardized residuals
@@ -566,7 +656,8 @@ chisquare <- function(data, B=999, adj.alpha=FALSE, format="short", graph=FALSE,
                   "Goodman-Kruskal's lambda (rows dependent)",
                   "Goodman-Kruskal's lambda (columns dependent)",
                   "Goodman-Kruskal's lambda (symmetric)",
-                  "Goodmak-Kruskal's tau",
+                  "Goodmak-Kruskal's tau (rows dependent)",
+                  "Goodmak-Kruskal's tau (columns dependent)",
                   "Goodmak-Kruskal's gamma",
                   "Cohen's k")
 
@@ -575,16 +666,17 @@ chisquare <- function(data, B=999, adj.alpha=FALSE, format="short", graph=FALSE,
                        paste0(Gsquared, " (p: ", p.Gsquared.to.report, ")"),
                        phi,
                        phi.signed,
-                       Q,
+                       report.of.Q,
                        report.of.or,
                        Cadj,
-                       V,
+                       report.of.V,
                        V.bc,
                        w,
                        lambda.row.dep,
                        lambda.col.dep,
                        lambda,
-                       tau,
+                       tau.row.dep,
+                       tau.col.dep,
                        paste0(gamma.coeff, " (p: ", gamma.p.to.report, ")"),
                        report.of.k)
 
@@ -598,13 +690,30 @@ chisquare <- function(data, B=999, adj.alpha=FALSE, format="short", graph=FALSE,
   col.names.vect <- colnames(df)
 
   #define the 'gt' elements for the output of the contingency table
+  #first, conditionally round the input table to eliminate the decimal places
+  #that may have been been introduced in all the cells in an earlier step when replacing the 0s with 0.001
+  #in order to be able to calculate G-squared
+  if(any(df==0.001)){
+    df <- round(df,0)
+  }
   input.table.out <- as.data.frame(addmargins(as.matrix(df)))
   input.table.out <- gt::gt(input.table.out, rownames_to_stub = T)
   input.table.out <- gt::cols_align(input.table.out,align="center")
   input.table.out <- gt::tab_header(input.table.out,
                                  title = gt::md("**Analysis report**"),
                                  subtitle = gt::md("*Observed frequencies*"))
-  input.table.out <- gt::tab_options(input.table.out, table.font.size=tfs, table.width = gt::pct(100))
+  input.table.out <- gt::tab_source_note(input.table.out,
+                                    md(paste0("*Chi-square: ", chisq.stat,
+                                    " (df: ", degrees.of.f, "; p: ", p.to.report,") <br>
+                                    G-square: ", Gsquared," (p: ", p.Gsquared.to.report, ") <br>
+                                    Cramer's V: ", report.of.V,
+                                    "<br> Goodman-Kruskal's lambda (symmetric): ", lambda,
+                                    "<br> Goodman-Kruskal's gamma: ", gamma.coeff,
+                                    "<br> Number of cells with a significant standardized residual: ", sum(abs(stand.res) > z.crit.two.tailed),
+                                    "<br> Number of cells with a significant moment-corrected standardized residual: ", sum(abs(mom.corr.stand.res) > z.crit.two.tailed),
+                                    "<br> Number of cells with a significant adjusted standardized residual: ", sum(abs(adj.stand.res) > z.crit.two.tailed),
+                                    "<br> Significance of the residuals set at alpha ", round(alpha.adj,3), " (two-tailed z critical: ", round(z.crit.two.tailed,3), ")*")))
+  input.table.out <- gt::tab_options(input.table.out, source_notes.font.size=10, table.font.size=tfs, table.width = gt::pct(100))
 
 
   #define the 'gt' elements for the output table of the expected frequencies
@@ -671,8 +780,7 @@ chisquare <- function(data, B=999, adj.alpha=FALSE, format="short", graph=FALSE,
   stand.res.out <- gt::tab_header(stand.res.out,
                               title = gt::md("**Analysis report**"),
                               subtitle = gt::md("*Standardized residuals*"))
-  stand.res.out <- gt::tab_source_note(stand.res.out,
-                                       md(note.for.residuals))
+  stand.res.out <- gt::tab_source_note(stand.res.out, md(note.for.residuals))
   stand.res.out <- gt::tab_options(stand.res.out, table.font.size=tfs, source_notes.font.size=10, table.width = gt::pct(100))
 
   for(i in seq_along(col.names.vect)) {
@@ -692,14 +800,39 @@ chisquare <- function(data, B=999, adj.alpha=FALSE, format="short", graph=FALSE,
   }
 
 
+  #define the 'gt' elements for the output table of the moment-corrected stand. residuals
+  mom.corr.stand.res.out <- gt::gt(as.data.frame(mom.corr.stand.res), rownames_to_stub = T)
+  mom.corr.stand.res.out <- gt::cols_align(mom.corr.stand.res.out,align="center")
+  mom.corr.stand.res.out <- gt::tab_header(mom.corr.stand.res.out,
+                                  title = gt::md("**Analysis report**"),
+                                  subtitle = gt::md("*Moment-corrected standardized residuals*"))
+  mom.corr.stand.res.out <- gt::tab_source_note(mom.corr.stand.res.out, md(note.for.residuals))
+  mom.corr.stand.res.out <- gt::tab_options(mom.corr.stand.res.out, table.font.size=tfs, source_notes.font.size=10, table.width = gt::pct(100))
+
+  for(i in seq_along(col.names.vect)) {
+    mom.corr.stand.res.out <- gt::tab_style(mom.corr.stand.res.out,
+                                   style = gt::cell_text(color="red"),
+                                   locations = gt::cells_body(
+                                     columns = col.names.vect[i],
+                                     rows = mom.corr.stand.res.out$`_data`[[col.names.vect[i]]] >= z.crit.two.tailed))
+  }
+
+  for(i in seq_along(col.names.vect)) {
+    mom.corr.stand.res.out <- gt::tab_style(mom.corr.stand.res.out,
+                                   style = gt::cell_text(color="blue"),
+                                   locations = gt::cells_body(
+                                     columns = col.names.vect[i],
+                                     rows = mom.corr.stand.res.out$`_data`[[col.names.vect[i]]] <= (0-z.crit.two.tailed)))
+  }
+
+
   #define the 'gt' elements for the output table of the adjusted stand. residuals
   adj.stand.res.out <- gt::gt(as.data.frame(adj.stand.res), rownames_to_stub = T)
   adj.stand.res.out <- gt::cols_align(adj.stand.res.out,align="center")
   adj.stand.res.out <- gt::tab_header(adj.stand.res.out,
                                   title = gt::md("**Analysis report**"),
                                   subtitle = gt::md("*Adjusted standardized residuals*"))
-  adj.stand.res.out <- gt::tab_source_note(adj.stand.res.out,
-                                           md(note.for.residuals))
+  adj.stand.res.out <- gt::tab_source_note(adj.stand.res.out, md(note.for.residuals))
   adj.stand.res.out <- gt::tab_options(adj.stand.res.out, table.font.size=tfs, source_notes.font.size=10, table.width = gt::pct(100))
 
   for(i in seq_along(col.names.vect)) {
@@ -747,6 +880,7 @@ chisquare <- function(data, B=999, adj.alpha=FALSE, format="short", graph=FALSE,
   print(relative.contrib.out)
   print(absolute.contrib.out)
   print(stand.res.out)
+  print(mom.corr.stand.res.out)
   print(adj.stand.res.out)
   print(report.out)
 
@@ -763,22 +897,27 @@ chisquare <- function(data, B=999, adj.alpha=FALSE, format="short", graph=FALSE,
                   "Gsq.statistic"=Gsquared,
                   "Gsq.p.value"=p.Gsquared,
                   "stand.resid."=stand.res,
+                  "mom.corr.stand.resid."=mom.corr.stand.res,
                   "adj.stand.resid."=adj.stand.res,
                   "Phi"=phi,
                   "Phi.signed"=phi.signed,
                   "Yule's Q"=Q,
+                  "Yule's Q p.value"=Q.p,
                   "Odds ratio"=or,
                   "Odds ratio CI lower boundary"=or.lower.ci,
                   "Odds ratio CI upper boundary"=or.upper.ci,
                   "Odds ratio p.value"=or.p.value,
                   "Cadj"=Cadj,
                   "Cramer's V"=V,
+                  "Cramer's V CI lower boundary"=V.lower,
+                  "Cramer's V CI upper boundary"=V.upper,
                   "Cramer's Vbc"=V.bc,
                   "w"=w,
                   "lambda (rows dep.)"=lambda.row.dep,
                   "lambda (cols dep.)"=lambda.col.dep,
                   "lambda (symmetric)"=lambda,
-                  "tau"=tau,
+                  "tau (rows dep.)"=tau.row.dep,
+                  "tau (cols dep.)"=tau.col.dep,
                   "gamma"=gamma.coeff,
                   "gamma.p.value"=gamma.p,
                   "k"=cohen.k,
