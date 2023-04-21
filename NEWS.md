@@ -1,7 +1,5 @@
-# chisquare 0.3:
+# chisquare 0.4:
 
-* Moment-corrected standardized residuals added;
-* 95% confidence interval for Cramer's V added; 
-* The output version of the input cross-tabulation now reports some essential analytical results in an annotation at the bottom of the table;
-* Fix to the output version of the input cross-tabulation when cells feature a frequency of 0;
-* The Goodman-Kruskal's tau reported in previous versions is now indicated as "columns dependent"", and the "row dependent" version of the same coefficent is now calculated and reported.
+* the facility to plot the odds ratios and 95% confidence intervals for table of size 2xk (where k>2) has been added;
+* the above added facility rests on a new internal function (visualize_odds_ratios);
+* amendements and updates to the help documentation.
