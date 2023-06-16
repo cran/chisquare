@@ -1,13 +1,13 @@
 #' R function for chi-square and G-square test of independence, measures of association, and standardized/moment-corrected
-#' standardized/adjusted standardized residuals
+#' standardized/adjusted standardized residuals, visualisation of odds ratio in 2xk tables (where k >= 2)
 #'
-#' The function performs the chi-square (and the G-square) test of independence on the input contingency table,
+#' @description The function performs the chi-square (and the G-square) test of independence on the input contingency table,
 #' calculates various measures of categorical association, returns standardized, moment-corrected standardized, and adjusted
 #' standardized residuals (with indication of their significance), and calculates relative and absolute contributions to the chi-square.
 #' The p value associated to the chi-square statistic is also calculated on the basis of a permutation-based procedure.
-#' Nicely-formatted output tables are rendered.
+#' Nicely-formatted output tables are rendered. Optionally, in 2xk tables (where k >= 2), a plot of the odds ratios can be rendered.
 #'
-#' The following \strong{measures of categorical associations} are produced by the function:
+#' @details The following \strong{measures of categorical associations} are produced by the function:
 #'  \itemize{
 #'   \item Phi (only for 2x2 tables)
 #'   \item Phi signed (only for 2x2 tables)
@@ -24,93 +24,104 @@
 #'   \item Cohen's k (and 95perc confidence interval)
 #' }
 #'
-#' The \strong{p value} of the observed chi-square statistic is also calculated on the basis of a \strong{permutation-based approach},
+#' \strong{P value of the chi-square statistic}\cr
+#' The p value of the observed chi-square statistic is also calculated on the basis of a permutation-based approach,
 #' using \emph{B} random tables created under the Null Hypothesis of independence. For the rationale of this approach,
-#' see for instance the description in Beh E.J., Lombardo R. 2014, Correspondence Analysis: Theory, Practice
-#' and New Strategies, Chichester, Wiley: 62-64.\cr
+#' see for instance the description in Beh-Lombardo 2014: 62-64. The permutation-based p value is calculated as follows: \cr
 #'
-#' The \strong{permutation-based p value} is calculated as follows: \cr
-#' \eqn{(1 + sum (chistat.perm > chisq.stat)) / (1 + B)}, where
+#' \eqn{(1 + sum (chistat.perm > chisq.stat)) / (1 + B)}, where\cr
+#'
 #' \emph{chistat.perm} is a vector storing the B chi-square statistics generated under the Null Hypothesis, and
 #' \emph{chisq.stat} is the observed chi-square statistic. For the logic of the calculation, see for example
-#' Baddeley et al., "Spatial Point Patterns. Methodology and Applications with R", CRC Press 2016: 387.\cr
+#' Baddeley et al. 2016: 387.\cr
 #'
-#' The \strong{moment-corrected standardized residuals} are calculated as follows: \cr
-#' \eqn{stand.res / (sqrt((nr-1)*(nc-1)/(nr*nc)))}, where \emph{stand.res} is each cell's standardized residual, \emph{nr} and
+#'
+#' \strong{Moment-corrected standardized residuals}\cr
+#' The moment-corrected standardized residuals are calculated as follows: \cr
+#'
+#' \eqn{stand.res / (sqrt((nr-1)*(nc-1)/(nr*nc)))}, where\cr
+#'
+#' \emph{stand.res} is each cell's standardized residual, \emph{nr} and
 #' \emph{nc} are the number of rows and columns respectively; see
-#' Garcia-Perez, MA, and Nunez-Anton, V (2003). Cellwise Residual Analysis in Two-Way Contingency Tables. Educational and Psychological Measurement, 63(5): 827.\cr
+#' Garcia-Perez-Nunez-Anton 2003: 827.\cr
 #'
-#' The \strong{adjusted standardized residuals} are calculated as follows: \cr
-#' \eqn{stand.res[i,j] / sqrt((1-sr[i]/n)*(1-sc[j]/n))}, where \emph{stand.res} is the standardized residual for cell \emph{ij},
+#'
+#' \strong{Adjusted standardized residuals}\cr
+#' The adjusted standardized residuals are calculated as follows: \cr
+#'
+#' \eqn{stand.res[i,j] / sqrt((1-sr[i]/n)*(1-sc[j]/n))}, where\cr
+#'
+#' \emph{stand.res} is the standardized residual for cell \emph{ij},
 #' \emph{sr} is the row sum for row \emph{i}, \emph{sc} is the column sum for column \emph{j}, and
 #' \emph{n} is the table grand total. The \emph{adjusted standardized residuals} may prove useful since it has
 #' been demonstrated that the standardized residuals tend to underestimate the significance of differences in small samples.
 #' The adjusted standardized residuals correct that deficiency.\cr
 #'
-#' The \strong{significance of the residuals} (standardized, moment-corrected standardized, and adjusted standardized) is assessed using alpha 0.05 or, optionally
+#' \strong{Significance of the residuals}\cr
+#' The significance of the residuals (standardized, moment-corrected standardized, and adjusted standardized) is assessed using alpha 0.05 or, optionally
 #' (by setting the parameter 'adj.alpha' to TRUE),
 #' using an adjusted alpha calculated using the Sidak's method:\cr
-#' \eqn{alpha.adj = 1-(1 - 0.05)^(1/(nr*nc))}, where \emph{nr} and \emph{nc} are the number of rows and columns in the table respectively. The adjusted
-#' alpha is then converted into a critical two-tailed z value. See: Beasley TM and Schumacker RE (1995), Multiple Regression Approach to Analyzing Contingency
-#' Tables: Post Hoc and Planned Comparison Procedures, The Journal of Experimental Education, 64(1): 86, 89.
 #'
-#' The \strong{cells' relative contribution (in percent) to the chi-square statistic} is calculated as:\cr
-#' \eqn{chisq.values / chisq.stat * 100}, where \emph{chisq.values} and \emph{chisq.stat} are the chi-square
+#' \eqn{alpha.adj = 1-(1 - 0.05)^(1/(nr*nc))}, where\cr
+#'
+#' \emph{nr} and \emph{nc} are the number of rows and columns in the table respectively. The adjusted
+#' alpha is then converted into a critical two-tailed z value. See: Beasley-Schumacker 1995: 86, 89.\cr
+#'
+#'
+#' \strong{Cells' relative contribution (in percent) to the chi-square statistic}\cr
+#' The cells' relative contribution (in percent) to the chi-square statistic is calculated as:\cr
+#'
+#' \eqn{chisq.values / chisq.stat * 100}, where\cr
+#'
+#' \emph{chisq.values} and \emph{chisq.stat} are the chi-square
 #' value in each individual cell of the table and the value of the chi-square statistic, respectively. The
 #' \emph{average contribution} is calculated as \eqn{100 / (nr*nc)}, where \emph{nr} and \emph{nc} are the
 #' number of rows and columns in the table respectively.\cr
 #'
-#' The \strong{cells' absolute contribution (in percent) to the chi-square statistic} is calculated as:\cr
-#' \eqn{chisq.values / n * 100}, where \emph{chisq.values} and \emph{n} are the chi-square
+#' \strong{Cells' absolute contribution (in percent) to the chi-square statistic}\cr
+#' The cells' absolute contribution (in percent) to the chi-square statistic is calculated as:\cr
+#'
+#' \eqn{chisq.values / n * 100}, where\cr
+#'
+#' \emph{chisq.values} and \emph{n} are the chi-square
 #' value in each individual cell of the table and the table's grant total, respectively. The
 #' \emph{average contribution} is calculated as sum of all the absolute contributions divided by the number of cells in
-#' the table. For both the relative and absolute contributions to the chi-square, see
-#' Beasley and Schumacker (1995): 90.\cr
+#' the table. For both the relative and absolute contributions to the chi-square, see:
+#' Beasley-Schumacker 1995: 90.\cr
 #'
-#' The calculation of the \strong{95perc confidence interval around Cramer's V} is based on Smithson M.J. (2003). Confidence Intervals,
-#' Quantitative Applications in the Social Sciences Series, No. 140. Thousand Oaks, CA: Sage, 39-41, and builds on the R code made
+#'
+#' \strong{95perc confidence interval around Cramer's V}\cr
+#' The calculation of the 95perc confidence interval around Cramer's V is based on Smithson 2003: 39-41, and builds on the R code made
 #' available by the author on the web (http://www.michaelsmithson.online/stats/CIstuff/CI.html).\cr
 #'
-#' The \strong{bias-corrected Cramer's V} is based on Bergsma, W. (2013).
-#' "A bias correction for Cramér's V and Tschuprow's T". Journal of the Korean Statistical Society. 42 (3): 323–328,
-#' https://doi.org/10.1016%2Fj.jkss.2012.10.002\cr
 #'
-#' For the \strong{other measures of categorical association} provided by the function, see for example
-#' Sheskin, D. J. (2011). Handbook of Parametric and Nonparametric Statistical Procedures, Fifth Edition (5th ed.). Chapman and Hall/CRC: 675-679,
-#' 1415-1427.\cr
+#' \strong{Bias-corrected Cramer's V}\cr
+#' The bias-corrected Cramer's V is based on Bergsma 2013: 323–328.\cr
 #'
-#' \strong{Note} that:\cr
-#' -the \strong{Phi} coefficient is based on the chi-square statistic as per Sheskin's equation 16.21, whereas the
-#' \strong{Phi signed} is after Sheskin's equation 16.20;\cr
 #'
-#' -the \strong{2-sided p value of Yule's Q} is calculated following Sheskin's equation 16.24;\cr
+#' \strong{Other measures of categorical association}\cr
+#' For the other measures of categorical association provided by the function, see for example Sheskin 2011: 1415-1427.\cr
 #'
-#' -\strong{Cohen's w} is calculate as \eqn{V * sqrt(min(nr, nc)-1)}, where \emph{V} is Cramer's V, and  \emph{nr} and  \emph{nc}
-#' are the number of rows and columns respectively; see Sheskin 2011: 679;\cr
 #'
-#' -in the output table reporting the result of the chi-square test and the various measures of association, the
-#' magnitude of the \strong{effect size} according to \emph{Cohen}'s guidelines is reported for Cramer's V, Cramer's V biase-corrected, and for Cohen's w;
-#' the effect size for the former two coefficients is only reported for tables featuring up to 5 degrees of freedom
-#' (see Cohen, J. (1988). Statistical power analysis for the behavioral sciences (2nd ed). Hillsdale, N.J: L. Erlbaum Associates);\cr
+#' \strong{Odds Ratio}\cr
+#' The odds ratio is calculated for 2x2 tables. In case of zeros along any of the table's diagonal,
+#' the \emph{Haldane-Anscombe} correction is applied. It consists in adding 0.5 to every cell of the table before calculating the odds ratio.
+#' For tables of size 2xk (where k >= 2), pairwise odds ratios can be plotted (along with their confidence interval) by
+#' setting the \code{or.alpha} parameter to \code{TRUE}. The mentioned correction
+#' is also applied to the calculation of those pairwise odds ratios (for more information on the plot, see further below).
+#' For the Haldane-Anscombe correction see, for instance, Fleiss-Levin-Paik 2003: 102-103.\cr
 #'
-#' -the \strong{2-tailed p value} of \strong{Goodman-Kruskal's gamma} is based on the
-#' associated z-score calculated as per Sheskin's equation 32.2;\cr
 #'
-#' -the \strong{symmetric} version of \strong{Goodman-Kruskal's lambda} is calculated
-#' as per Reynolds, H. T. (1984). Analysis of Nominal Data (Quantitative Applications in the Social Sciences) (1st ed.). SAGE Publications: 55-57;\cr
-#'
-#' -\strong{Goodman-Kruskal's tau} is calculated as per Reynolds 1984: 57-60;\cr
-#'
-#' -\strong{Cohen's k} is calculated as per Sheskin 2011: 688-689 (equation 16.30).\cr
-#'
-#' About the \strong{plot of odds ratios} for 2xk table, where k>2:\cr
+#' \strong{Odd Ratios plot}\cr
+#' For 2xk table, where k >= 2:\cr
 #' by setting the \code{plor.or} parameter to \code{TRUE}, a plot showing the odds ratios and their 95percent confidence interval will be rendered.
 #' The confidence level can be modified via the \code{or.alpha} parameter. The odds ratios are calculated for the column levels, and one of them
-#' is to be selected by the user as a reference for comparison via the \code{reference_level} parameter (set to 1 by default).
-#' Also, the user may want to select the row category to which the calculation of the odds ratios makes reference (using the \code{row_category} parameter,
-#' which is set to 1 by default).\cr
+#' is to be selected by the user as a reference for comparison via the \code{reference.level} parameter (set to 1 by default).
+#' Also, the user may want to select the row category to which the calculation of the odds ratios makes reference (using the \code{row.level} parameter,
+#' which is set to 1 by default). If any of the pairwisely-generated 2x2 tables on which the odds ratio is calculated
+#' features zeros along any of the diagonal, the \emph{Haldane-Anscombe} correction is applied (see above). \cr
 #'
-#' To better understand the rationale, consider the following example, which rests on the famous Titanic data:\cr
+#' To better understand the rationale of plotting the odds ratios, consider the following example, which uses on the famous Titanic data:\cr
 #'
 #' Create a 2x3 contingency table:\cr
 #' mytable <- matrix(c(123, 158, 528, 200, 119, 181), nrow = 2, byrow = TRUE)\cr
@@ -118,28 +129,54 @@
 #' rownames(mytable) <- c("Died", "Survived")\cr
 #'
 #' Now, we perform the test and visualise the odds ratios:\cr
-#' chisquare(mytable, plot.or=TRUE, reference_level=1, row_category=1)\cr
+#' chisquare(mytable, plot.or=TRUE, reference.level=1, row.level=1)\cr
 #'
 #' In the rendered plot, we can see the odds ratios and confidence intervals for the second and third column level
 #' (i.e., 2nd class and 3rd class) because the first column level has been selected as reference level. The odds ratios are calculated
 #' making reference to the first row category (i.e., \emph{Died}). From the plot, we can see that, compared to the 1st class,
-#' passenger on the 2nd class have 2.16 times larger odds of dying; passengers on the 3rd class have 4.74 times larger odds of dying
+#' passengers on the 2nd class have 2.16 times larger odds of dying; passengers on the 3rd class have 4.74 times larger odds of dying
 #' compared to the 1st class.\cr
 #'
-#' Note that if we set the \code{row_category} parameter to \code{2}, we make reference to the second row category, i.e. \emph{Survived}:\cr
-#' chisquare(mytable, plot.or=TRUE, reference_level=1, row_category=2)\cr
+#' Note that if we set the \code{row.level} parameter to \code{2}, we make reference to the second row category, i.e. \emph{Survived}:\cr
+#' chisquare(mytable, plot.or=TRUE, reference.level=1, row.level=2)\cr
 #'
 #' In the plot, we can see that passengers in the 2nd class have 0.46 times the odds of surviving of passengers in the 1st class, while
-#' passengers from the 3rd class have 0.21 times the odds of surviving of those who were travelling in the 1st class.\cr
+#' passengers from the 3rd class have 0.21 times the odds of surviving of those travelling in the 1st class.\cr
+#'
+#'
+#'
+#' \strong{Note}\cr
+#' -the \strong{Phi} coefficient is based on the chi-square statistic as per Sheskin 2011's equation 16.21, whereas the
+#' \strong{Phi signed} is after Sheskin's equation 16.20;\cr
+#'
+#' -the \strong{2-sided p value of Yule's Q} is calculated following Sheskin 2011's equation 16.24;\cr
+#'
+#' -\strong{Cohen's w} is calculate as \eqn{V * sqrt(min(nr, nc)-1)}, where \emph{V} is Cramer's V, and  \emph{nr} and  \emph{nc}
+#' are the number of rows and columns respectively; see Sheskin 2011: 679;\cr
+#'
+#' -in the output table reporting the result of the chi-square test and the various measures of association, the
+#' magnitude of the \strong{effect size} according to \emph{Cohen}'s guidelines is reported for Cramer's V, Cramer's V biase-corrected, and for Cohen's w;
+#' the effect size for the former two coefficients is only reported for tables featuring up to 5 degrees of freedom
+#' (see Cohen 1988);\cr
+#'
+#' -the \strong{2-tailed p value} of \strong{Goodman-Kruskal's gamma} is based on the
+#' associated z-score calculated as per Sheskin 2011's equation 32.2;\cr
+#'
+#' -the \strong{symmetric} version of \strong{Goodman-Kruskal's lambda} is calculated
+#' as per Reynolds 1984: 55-57;\cr
+#'
+#' -\strong{Goodman-Kruskal's tau} is calculated as per Reynolds 1984: 57-60;\cr
+#'
+#' -\strong{Cohen's k} is calculated as per Sheskin 2011: 688-689 (equation 16.30).\cr
 #'
 #'
 #' @param data Dataframe containing the input contingency table.
 #' @param B  Number of simulated tables to be used to calculate the Monte Carlo-based p value (999 by default).
-#' @param plot.or Takes TRUE or FALSE (default) if the user wants a plot of the odds ratios to be rendered (only for 2xk tables, where k>2).
-#' @param reference_level The index of the column reference level for odds ratio calculations (default: 1).
-#' The user must select the column level to serve as the reference level (only for 2xk tables, where k>2).
-#' @param row_category The index of the row category to be used in odds ratio calculations (1 or 2; default: 1).
-#' The user must select the row level to which the calculation of the odds ratios make reference (only for 2xk tables, where k>2).
+#' @param plot.or Takes TRUE or FALSE (default) if the user wants a plot of the odds ratios to be rendered (only for 2xk tables, where k >= 2).
+#' @param reference.level The index of the column reference level for odds ratio calculations (default: 1).
+#' The user must select the column level to serve as the reference level (only for 2xk tables, where k >= 2).
+#' @param row.level The index of the row category to be used in odds ratio calculations (1 or 2; default: 1).
+#' The user must select the row level to which the calculation of the odds ratios make reference (only for 2xk tables, where k >= 2).
 #' @param or.alpha The significance level used for the odds ratios' confidence intervals (default: 0.05).
 #' @param adj.alpha  Takes TRUE or FALSE (default) if the user wants or does not want the significance level of the
 #' residuals (both standarized and adjusted standardized) to be corrected using the Sidak's adjustment method (see Details).
@@ -153,7 +190,7 @@
 #'
 #'
 #' @return The function produces \strong{optional charts} (distribution of the permuted chi-square statistic
-#' and a plot of the odds ratios between a reference column level and the other ones, the latter only for 2xk tables), and
+#' and a plot of the odds ratios between a reference column level and the other ones, the latter only for 2xk tables where k >= 2), and
 #' a number of \strong{output tables} that are nicely formatted with the help of the \emph{gt} package.
 #' The output tables are listed below:
 #'
@@ -240,6 +277,28 @@
 #'
 #' @keywords chiperm
 #'
+#'
+#' @references Baddeley et al. 2016. Spatial Point Patterns. Methodology and Applications with R, CRC Press.
+#'
+#' @references Beh E.J., Lombardo R. 2014. Correspondence Analysis: Theory, Practice and New Strategies, Chichester, Wiley.
+#'
+#' @references Beasley TM and Schumacker RE. 1995. Multiple Regression Approach to Analyzing Contingency Tables: Post Hoc and Planned Comparison Procedures. The Journal of Experimental Education, 64(1).
+#'
+#' @references Bergsma, W. 2013. A bias correction for Cramér's V and Tschuprow's T. Journal of the Korean Statistical Society. 42 (3).
+#'
+#' @references Cohen, J. 1988. Statistical power analysis for the behavioral sciences (2nd ed). Hillsdale, N.J: L. Erlbaum Associates.
+#'
+#' @references Fleiss, J. L., Levin, B., & Paik, M. C. 2003. Statistical Methods for Rates and Proportions (3rd ed.). Wiley.
+#'
+#' @references Garcia-Perez, MA, and Nunez-Anton, V. 2003. Cellwise Residual Analysis in Two-Way Contingency Tables. Educational and Psychological Measurement, 63(5).
+#'
+#' @references Reynolds, H. T. 1984. Analysis of Nominal Data (Quantitative Applications in the Social Sciences) (1st ed.). SAGE Publications.
+#'
+#' @references Sheskin, D. J. 2011. Handbook of Parametric and Nonparametric Statistical Procedures, Fifth Edition (5th ed.). Chapman and Hall/CRC.
+#'
+#' @references Smithson M.J. 2003. Confidence Intervals, Quantitative Applications in the Social Sciences Series, No. 140. Thousand Oaks, CA: Sage.
+#'
+#'
 #' @export
 #'
 #' @importFrom gt gt cols_align tab_header md tab_source_note tab_options pct
@@ -253,7 +312,7 @@
 #'
 #'
 #'
-chisquare <- function(data, B=999, plot.or= FALSE, reference_level = 1, row_category = 1, or.alpha = 0.05, adj.alpha=FALSE, format="short", graph=FALSE, tfs=14){
+chisquare <- function(data, B=999, plot.or= FALSE, reference.level = 1, row.level = 1, or.alpha = 0.05, adj.alpha=FALSE, format="short", graph=FALSE, tfs=14){
   VALUE <- NULL
   df <- data
 
@@ -340,9 +399,9 @@ chisquare <- function(data, B=999, plot.or= FALSE, reference_level = 1, row_cate
   p.uppertail <- (1 + sum (chistat.perm > chisq.stat)) / (1 + B)
 
   p.uppertail.to.report <- ifelse(p.uppertail < 0.001, "< 0.001",
-                        ifelse(p.uppertail < 0.01, "< 0.01",
-                               ifelse(p.uppertail < 0.05, "< 0.05",
-                                      round(p.uppertail, 3))))
+                                  ifelse(p.uppertail < 0.01, "< 0.01",
+                                         ifelse(p.uppertail < 0.05, "< 0.05",
+                                                round(p.uppertail, 3))))
 
   #G-squared
   #if any of the cells in the input table is equal to 0,
@@ -356,9 +415,13 @@ chisquare <- function(data, B=999, plot.or= FALSE, reference_level = 1, row_cate
   p.Gsquared <- as.numeric(format(pchisq(q=Gsquared, df=degrees.of.f, lower.tail=FALSE), scientific = T))
 
   p.Gsquared.to.report <- ifelse(p.Gsquared < 0.001, "< 0.001",
-                        ifelse(p.Gsquared < 0.01, "< 0.01",
-                               ifelse(p.Gsquared < 0.05, "< 0.05",
-                                      round(p.Gsquared,3))))
+                                 ifelse(p.Gsquared < 0.01, "< 0.01",
+                                        ifelse(p.Gsquared < 0.05, "< 0.05",
+                                               round(p.Gsquared,3))))
+
+  # To play safe, assign the input dataset to the object 'df' again,
+  # because of the preceding addition of 0.001 in case of 0s
+  df <- data
 
   #Phi
   if (nr==2 & nc==2) {
@@ -494,30 +557,30 @@ chisquare <- function(data, B=999, plot.or= FALSE, reference_level = 1, row_cate
 
     if (degrees.of.f == 1){
       Vbc.effect.size <- ifelse(V.bc <= 0.10, "negligible",
-                              ifelse(V.bc <= 0.30, "small effect",
-                                     ifelse(V.bc <= 0.50, "medium effect", "large effect")))
+                                ifelse(V.bc <= 0.30, "small effect",
+                                       ifelse(V.bc <= 0.50, "medium effect", "large effect")))
     }
 
     if (degrees.of.f == 2){
       Vbc.effect.size <- ifelse(V.bc <= 0.07, "negligible",
-                              ifelse(V.bc <= 0.21, "small effect",
-                                     ifelse(V.bc <= 0.35, "medium effect", "large effect")))
+                                ifelse(V.bc <= 0.21, "small effect",
+                                       ifelse(V.bc <= 0.35, "medium effect", "large effect")))
     }
 
     if (degrees.of.f == 3){
       Vbc.effect.size <- ifelse(V.bc <= 0.06, "negligible",
-                              ifelse(V.bc <= 0.17, "small effect",
-                                     ifelse(V.bc <= 0.29, "medium effect", "large effect")))
+                                ifelse(V.bc <= 0.17, "small effect",
+                                       ifelse(V.bc <= 0.29, "medium effect", "large effect")))
     }
     if (degrees.of.f == 4){
       Vbc.effect.size <- ifelse(V.bc <= 0.05, "negligible",
-                              ifelse(V.bc <= 0.15, "small effect",
-                                     ifelse(V.bc <= 0.25, "medium effect", "large effect")))
+                                ifelse(V.bc <= 0.15, "small effect",
+                                       ifelse(V.bc <= 0.25, "medium effect", "large effect")))
     }
     if (degrees.of.f == 5){
       Vbc.effect.size <- ifelse(V.bc <= 0.05, "negligible",
-                              ifelse(V.bc <= 0.13, "small effect",
-                                     ifelse(V.bc <= 0.22, "medium effect", "large effect")))
+                                ifelse(V.bc <= 0.13, "small effect",
+                                       ifelse(V.bc <= 0.22, "medium effect", "large effect")))
     }
     Vbc.effect.size.to.report <- paste0(" (", Vbc.effect.size,")")
 
@@ -530,7 +593,7 @@ chisquare <- function(data, B=999, plot.or= FALSE, reference_level = 1, row_cate
   w <- round(V * sqrt(min(nr, nc)-1),3)
   w_label <- ifelse(w <= 0.10, "negligible",
                     ifelse(w <= 0.30, "small effect",
-                            ifelse(w <= 0.50, "medium effect", "large effect")))
+                           ifelse(w <= 0.50, "medium effect", "large effect")))
 
   #Goodman-Kruskal's lambda
   E1 <- n - max(sr)
@@ -576,39 +639,47 @@ chisquare <- function(data, B=999, plot.or= FALSE, reference_level = 1, row_cate
   gamma.p <- as.numeric(format(calc.gamma(df)$GK.gamma.p, scientific = T))
 
   gamma.p.to.report <- ifelse(gamma.p < 0.001, "< 0.001",
-                        ifelse(gamma.p < 0.01, "< 0.01",
-                               ifelse(gamma.p < 0.05, "< 0.05",
-                                      round(gamma.p,3))))
+                              ifelse(gamma.p < 0.01, "< 0.01",
+                                     ifelse(gamma.p < 0.05, "< 0.05",
+                                            round(gamma.p,3))))
 
   #Goodman-Kruskal's tau
   calc.tau <- function(x){
-  tot.n.errors.rowwise <- sum(((sum(x)-rowSums(x))/sum(x))*rowSums(x))
-  errors.col.wise <- matrix(nrow=nrow(x), ncol=ncol(x))
-  for (i in 1:nrow(x)) {
-    for (j in 1:ncol(x)) {
-      errors.col.wise[i,j] <- ((colSums(x)[j] - x[i,j]) / colSums(x)[j]) * x[i,j]
+    tot.n.errors.rowwise <- sum(((sum(x)-rowSums(x))/sum(x))*rowSums(x))
+    errors.col.wise <- matrix(nrow=nrow(x), ncol=ncol(x))
+    for (i in 1:nrow(x)) {
+      for (j in 1:ncol(x)) {
+        errors.col.wise[i,j] <- ((colSums(x)[j] - x[i,j]) / colSums(x)[j]) * x[i,j]
+      }
     }
-  }
-  tau <- round((tot.n.errors.rowwise - sum(errors.col.wise)) / tot.n.errors.rowwise, 3)
-  return(tau)
+    tau <- round((tot.n.errors.rowwise - sum(errors.col.wise)) / tot.n.errors.rowwise, 3)
+    return(tau)
   }
 
   tau.row.dep <- calc.tau(t(df))
   tau.col.dep <- calc.tau(df)
 
   #Odds ratio
+  # Check if the table is 2x2
   if (nr==2 & nc==2) {
-    or <- round(((df[1,1]*df[2,2]) / (df[1,2]*df[2,1])),3)
-    se <- sqrt((1/df[1,1])+(1/df[1,2])+(1/df[2,1])+(1/df[2,2]))
+    # Check for zeros along the diagonal of the 2x2 table
+    if (df[1,1] * df[2,2] == 0 || df[1,2] * df[2, 1] == 0) {
+      # In case of zeros along any of the diagonals, add 0.5 to every cell of the 2x2 table
+      df.to.use <- df + 0.5
+    } else {
+      df.to.use <- df
+    }
+    or <- round(((df.to.use[1,1]*df.to.use[2,2]) / (df.to.use[1,2]*df.to.use[2,1])),3)
+    se <- sqrt((1/df.to.use[1,1])+(1/df.to.use[1,2])+(1/df.to.use[2,1])+(1/df.to.use[2,2]))
     or.upper.ci <- round(exp(log(or)+1.96*se),3)
     or.lower.ci <- round(exp(log(or)-1.96*se),3)
     or.z <- (log(or)/se)
     or.p.value <- as.numeric(format((exp(-0.717*or.z-0.416*or.z*or.z)), scientific = T))
 
     or.p.to.report <- ifelse(or.p.value < 0.001, "< 0.001",
-                                ifelse(or.p.value < 0.01, "< 0.01",
-                                       ifelse(or.p.value < 0.05, "< 0.05",
-                                              round(or.p.value,3))))
+                             ifelse(or.p.value < 0.01, "< 0.01",
+                                    ifelse(or.p.value < 0.05, "< 0.05",
+                                           round(or.p.value,3))))
 
     report.of.or <- paste0(or, " (95% CI ", or.lower.ci,"-", or.upper.ci, "; p: ", or.p.to.report, ")")
 
@@ -685,9 +756,9 @@ chisquare <- function(data, B=999, plot.or= FALSE, reference_level = 1, row_cate
                   "Yule's Q",
                   "Odds ratio",
                   "Cadj",
-                   paste0("Cramer's V", V.effect.size.to.report),
-                   paste0("Cramer's V bias-corrected", Vbc.effect.size.to.report),
-                   paste0("Cohen's w", " (", w_label, ")"),
+                  paste0("Cramer's V", V.effect.size.to.report),
+                  paste0("Cramer's V bias-corrected", Vbc.effect.size.to.report),
+                  paste0("Cohen's w", " (", w_label, ")"),
                   "Goodman-Kruskal's lambda (rows dependent)",
                   "Goodman-Kruskal's lambda (columns dependent)",
                   "Goodman-Kruskal's lambda (symmetric)",
@@ -735,19 +806,19 @@ chisquare <- function(data, B=999, plot.or= FALSE, reference_level = 1, row_cate
   input.table.out <- gt::gt(input.table.out, rownames_to_stub = T)
   input.table.out <- gt::cols_align(input.table.out,align="center")
   input.table.out <- gt::tab_header(input.table.out,
-                                 title = gt::md("**Analysis report**"),
-                                 subtitle = gt::md("*Observed frequencies*"))
+                                    title = gt::md("**Analysis report**"),
+                                    subtitle = gt::md("*Observed frequencies*"))
   input.table.out <- gt::tab_source_note(input.table.out,
-                                    md(paste0("*Chi-square: ", chisq.stat,
-                                    " (df: ", degrees.of.f, "; p: ", p.to.report,") <br>
+                                         md(paste0("*Chi-square: ", chisq.stat,
+                                                   " (df: ", degrees.of.f, "; p: ", p.to.report,") <br>
                                     G-square: ", Gsquared," (p: ", p.Gsquared.to.report, ") <br>
                                     Cramer's V: ", report.of.V,
-                                    "<br> Goodman-Kruskal's lambda (symmetric): ", lambda,
-                                    "<br> Goodman-Kruskal's gamma: ", gamma.coeff,
-                                    "<br> Number of cells with a significant standardized residual: ", sum(abs(stand.res) > z.crit.two.tailed),
-                                    "<br> Number of cells with a significant moment-corrected standardized residual: ", sum(abs(mom.corr.stand.res) > z.crit.two.tailed),
-                                    "<br> Number of cells with a significant adjusted standardized residual: ", sum(abs(adj.stand.res) > z.crit.two.tailed),
-                                    "<br> Significance of the residuals set at alpha ", round(alpha.adj,3), " (two-tailed z critical: ", round(z.crit.two.tailed,3), ")*")))
+                                                   "<br> Goodman-Kruskal's lambda (symmetric): ", lambda,
+                                                   "<br> Goodman-Kruskal's gamma: ", gamma.coeff,
+                                                   "<br> Number of cells with a significant standardized residual: ", sum(abs(stand.res) > z.crit.two.tailed),
+                                                   "<br> Number of cells with a significant moment-corrected standardized residual: ", sum(abs(mom.corr.stand.res) > z.crit.two.tailed),
+                                                   "<br> Number of cells with a significant adjusted standardized residual: ", sum(abs(adj.stand.res) > z.crit.two.tailed),
+                                                   "<br> Significance of the residuals set at alpha ", round(alpha.adj,3), " (two-tailed z critical: ", round(z.crit.two.tailed,3), ")*")))
   input.table.out <- gt::tab_options(input.table.out, source_notes.font.size=10, table.font.size=tfs, table.width = gt::pct(100))
 
 
@@ -755,8 +826,8 @@ chisquare <- function(data, B=999, plot.or= FALSE, reference_level = 1, row_cate
   exp.freq.out <- gt::gt(as.data.frame(exp.freq), rownames_to_stub = T)
   exp.freq.out <- gt::cols_align(exp.freq.out,align="center")
   exp.freq.out <- gt::tab_header(exp.freq.out,
-                             title = gt::md("**Analysis report**"),
-                             subtitle = gt::md("*Expected frequencies*"))
+                                 title = gt::md("**Analysis report**"),
+                                 subtitle = gt::md("*Expected frequencies*"))
   exp.freq.out <- gt::tab_options(exp.freq.out, table.font.size=tfs, table.width = gt::pct(100))
 
 
@@ -764,8 +835,8 @@ chisquare <- function(data, B=999, plot.or= FALSE, reference_level = 1, row_cate
   chisq.values.out <- gt::gt(as.data.frame(chisq.values), rownames_to_stub = T)
   chisq.values.out <- gt::cols_align(chisq.values.out,align="center")
   chisq.values.out <- gt::tab_header(chisq.values.out,
-                                 title = gt::md("**Analysis report**"),
-                                 subtitle = gt::md("*Chi-square values*"))
+                                     title = gt::md("**Analysis report**"),
+                                     subtitle = gt::md("*Chi-square values*"))
   chisq.values.out <- gt::tab_options(chisq.values.out, table.font.size=tfs, table.width = gt::pct(100))
 
 
@@ -773,19 +844,19 @@ chisquare <- function(data, B=999, plot.or= FALSE, reference_level = 1, row_cate
   relative.contrib.out <- gt::gt(as.data.frame(relative.contrib), rownames_to_stub = T)
   relative.contrib.out <- gt::cols_align(relative.contrib.out,align="center")
   relative.contrib.out <- gt::tab_header(relative.contrib.out,
-                                     title = gt::md("**Analysis report**"),
-                                     subtitle = gt::md("*Relative contributions to the chi-square statistic (in percent)*"))
+                                         title = gt::md("**Analysis report**"),
+                                         subtitle = gt::md("*Relative contributions to the chi-square statistic (in percent)*"))
 
   relative.contrib.out <- gt::tab_source_note(relative.contrib.out,
-                                       md("*RED: larger-than-average contributions*"))
+                                              md("*RED: larger-than-average contributions*"))
   relative.contrib.out <- gt::tab_options(relative.contrib.out, table.font.size=tfs, source_notes.font.size=10, table.width = gt::pct(100))
 
   for(i in seq_along(col.names.vect)) {
     relative.contrib.out <- gt::tab_style(relative.contrib.out,
-                                   style = gt::cell_text(color="red"),
-                                   locations = gt::cells_body(
-                                     columns = col.names.vect[i],
-                                     rows = relative.contrib.out$`_data`[[col.names.vect[i]]] >= average.relat.contr))
+                                          style = gt::cell_text(color="red"),
+                                          locations = gt::cells_body(
+                                            columns = col.names.vect[i],
+                                            rows = relative.contrib.out$`_data`[[col.names.vect[i]]] >= average.relat.contr))
   }
 
 
@@ -813,25 +884,25 @@ chisquare <- function(data, B=999, plot.or= FALSE, reference_level = 1, row_cate
   stand.res.out <- gt::gt(as.data.frame(stand.res), rownames_to_stub = T)
   stand.res.out <- gt::cols_align(stand.res.out,align="center")
   stand.res.out <- gt::tab_header(stand.res.out,
-                              title = gt::md("**Analysis report**"),
-                              subtitle = gt::md("*Standardized residuals*"))
+                                  title = gt::md("**Analysis report**"),
+                                  subtitle = gt::md("*Standardized residuals*"))
   stand.res.out <- gt::tab_source_note(stand.res.out, md(note.for.residuals))
   stand.res.out <- gt::tab_options(stand.res.out, table.font.size=tfs, source_notes.font.size=10, table.width = gt::pct(100))
 
   for(i in seq_along(col.names.vect)) {
     stand.res.out <- gt::tab_style(stand.res.out,
-                             style = gt::cell_text(color="red"),
-                             locations = gt::cells_body(
-                               columns = col.names.vect[i],
-                               rows = stand.res.out$`_data`[[col.names.vect[i]]] >= z.crit.two.tailed))
+                                   style = gt::cell_text(color="red"),
+                                   locations = gt::cells_body(
+                                     columns = col.names.vect[i],
+                                     rows = stand.res.out$`_data`[[col.names.vect[i]]] >= z.crit.two.tailed))
   }
 
   for(i in seq_along(col.names.vect)) {
     stand.res.out <- gt::tab_style(stand.res.out,
-                             style = gt::cell_text(color="blue"),
-                             locations = gt::cells_body(
-                               columns = col.names.vect[i],
-                               rows = stand.res.out$`_data`[[col.names.vect[i]]] <= (0-z.crit.two.tailed)))
+                                   style = gt::cell_text(color="blue"),
+                                   locations = gt::cells_body(
+                                     columns = col.names.vect[i],
+                                     rows = stand.res.out$`_data`[[col.names.vect[i]]] <= (0-z.crit.two.tailed)))
   }
 
 
@@ -839,25 +910,25 @@ chisquare <- function(data, B=999, plot.or= FALSE, reference_level = 1, row_cate
   mom.corr.stand.res.out <- gt::gt(as.data.frame(mom.corr.stand.res), rownames_to_stub = T)
   mom.corr.stand.res.out <- gt::cols_align(mom.corr.stand.res.out,align="center")
   mom.corr.stand.res.out <- gt::tab_header(mom.corr.stand.res.out,
-                                  title = gt::md("**Analysis report**"),
-                                  subtitle = gt::md("*Moment-corrected standardized residuals*"))
+                                           title = gt::md("**Analysis report**"),
+                                           subtitle = gt::md("*Moment-corrected standardized residuals*"))
   mom.corr.stand.res.out <- gt::tab_source_note(mom.corr.stand.res.out, md(note.for.residuals))
   mom.corr.stand.res.out <- gt::tab_options(mom.corr.stand.res.out, table.font.size=tfs, source_notes.font.size=10, table.width = gt::pct(100))
 
   for(i in seq_along(col.names.vect)) {
     mom.corr.stand.res.out <- gt::tab_style(mom.corr.stand.res.out,
-                                   style = gt::cell_text(color="red"),
-                                   locations = gt::cells_body(
-                                     columns = col.names.vect[i],
-                                     rows = mom.corr.stand.res.out$`_data`[[col.names.vect[i]]] >= z.crit.two.tailed))
+                                            style = gt::cell_text(color="red"),
+                                            locations = gt::cells_body(
+                                              columns = col.names.vect[i],
+                                              rows = mom.corr.stand.res.out$`_data`[[col.names.vect[i]]] >= z.crit.two.tailed))
   }
 
   for(i in seq_along(col.names.vect)) {
     mom.corr.stand.res.out <- gt::tab_style(mom.corr.stand.res.out,
-                                   style = gt::cell_text(color="blue"),
-                                   locations = gt::cells_body(
-                                     columns = col.names.vect[i],
-                                     rows = mom.corr.stand.res.out$`_data`[[col.names.vect[i]]] <= (0-z.crit.two.tailed)))
+                                            style = gt::cell_text(color="blue"),
+                                            locations = gt::cells_body(
+                                              columns = col.names.vect[i],
+                                              rows = mom.corr.stand.res.out$`_data`[[col.names.vect[i]]] <= (0-z.crit.two.tailed)))
   }
 
 
@@ -865,25 +936,25 @@ chisquare <- function(data, B=999, plot.or= FALSE, reference_level = 1, row_cate
   adj.stand.res.out <- gt::gt(as.data.frame(adj.stand.res), rownames_to_stub = T)
   adj.stand.res.out <- gt::cols_align(adj.stand.res.out,align="center")
   adj.stand.res.out <- gt::tab_header(adj.stand.res.out,
-                                  title = gt::md("**Analysis report**"),
-                                  subtitle = gt::md("*Adjusted standardized residuals*"))
+                                      title = gt::md("**Analysis report**"),
+                                      subtitle = gt::md("*Adjusted standardized residuals*"))
   adj.stand.res.out <- gt::tab_source_note(adj.stand.res.out, md(note.for.residuals))
   adj.stand.res.out <- gt::tab_options(adj.stand.res.out, table.font.size=tfs, source_notes.font.size=10, table.width = gt::pct(100))
 
   for(i in seq_along(col.names.vect)) {
     adj.stand.res.out <- gt::tab_style(adj.stand.res.out,
-                                   style = gt::cell_text(color="red"),
-                                   locations = gt::cells_body(
-                                     columns = col.names.vect[i],
-                                     rows = adj.stand.res.out$`_data`[[col.names.vect[i]]] >= z.crit.two.tailed))
+                                       style = gt::cell_text(color="red"),
+                                       locations = gt::cells_body(
+                                         columns = col.names.vect[i],
+                                         rows = adj.stand.res.out$`_data`[[col.names.vect[i]]] >= z.crit.two.tailed))
   }
 
   for(i in seq_along(col.names.vect)) {
     adj.stand.res.out <- gt::tab_style(adj.stand.res.out,
-                                   style = gt::cell_text(color="blue"),
-                                   locations = gt::cells_body(
-                                     columns = col.names.vect[i],
-                                     rows = adj.stand.res.out$`_data`[[col.names.vect[i]]] <= (0-z.crit.two.tailed)))
+                                       style = gt::cell_text(color="blue"),
+                                       locations = gt::cells_body(
+                                         columns = col.names.vect[i],
+                                         rows = adj.stand.res.out$`_data`[[col.names.vect[i]]] <= (0-z.crit.two.tailed)))
   }
 
 
@@ -893,15 +964,15 @@ chisquare <- function(data, B=999, plot.or= FALSE, reference_level = 1, row_cate
   report.out <- gt::cols_align(report.out,align="right", columns=VALUE)
 
   report.out <- gt::tab_header(report.out,
-                           title = gt::md("**Analysis report**"),
-                           subtitle = gt::md("*Chi-square and G-square test, and measures of association*"))
+                               title = gt::md("**Analysis report**"),
+                               subtitle = gt::md("*Chi-square and G-square test, and measures of association*"))
 
   report.out <- gt::cols_label(report.out,
-                           STATISTIC = gt::md("**STATISTIC**"),
-                           VALUE = gt::md("**VALUE**"),)
+                               STATISTIC = gt::md("**STATISTIC**"),
+                               VALUE = gt::md("**VALUE**"),)
 
   report.out <- gt::tab_source_note(report.out,
-                                           md("Thresholds for the strength of categorical association: <br>
+                                    md("Thresholds for the strength of categorical association: <br>
                                            *Weak* association 0.00-0.10; *Moderate* association 0.11-0.30; *Strong* association 0.31-1.00
                                            <br> <br> after Healey J.F. 2013, *The Essentials of Statistics. A Tool for Social Research*, 3rd ed., Belmont: Wadsworth"))
 
@@ -960,7 +1031,7 @@ chisquare <- function(data, B=999, plot.or= FALSE, reference_level = 1, row_cate
                   "k CI upper boundary"=k.upper.ci)
 
   if (plot.or==TRUE) {
-    visualize_odds_ratios(df, reference_level = reference_level, row_category = row_category , or.alpha = or.alpha)
+    visualize_odds_ratios(data, reference.level = reference.level, row.level = row.level , or.alpha = or.alpha)
   }
 
   return(results)

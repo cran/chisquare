@@ -3,14 +3,14 @@
 \name{chisquare}
 \alias{chisquare}
 \title{R function for chi-square and G-square test of independence, measures of association, and standardized/moment-corrected
-standardized/adjusted standardized residuals}
+standardized/adjusted standardized residuals, visualisation of odds ratio in 2xk tables (where k >= 2)}
 \usage{
 chisquare(
   data,
   B = 999,
   plot.or = FALSE,
-  reference_level = 1,
-  row_category = 1,
+  reference.level = 1,
+  row.level = 1,
   or.alpha = 0.05,
   adj.alpha = FALSE,
   format = "short",
@@ -23,13 +23,13 @@ chisquare(
 
 \item{B}{Number of simulated tables to be used to calculate the Monte Carlo-based p value (999 by default).}
 
-\item{plot.or}{Takes TRUE or FALSE (default) if the user wants a plot of the odds ratios to be rendered (only for 2xk tables, where k>2).}
+\item{plot.or}{Takes TRUE or FALSE (default) if the user wants a plot of the odds ratios to be rendered (only for 2xk tables, where k >= 2).}
 
-\item{reference_level}{The index of the column reference level for odds ratio calculations (default: 1).
-The user must select the column level to serve as the reference level (only for 2xk tables, where k>2).}
+\item{reference.level}{The index of the column reference level for odds ratio calculations (default: 1).
+The user must select the column level to serve as the reference level (only for 2xk tables, where k >= 2).}
 
-\item{row_category}{The index of the row category to be used in odds ratio calculations (1 or 2; default: 1).
-The user must select the row level to which the calculation of the odds ratios make reference (only for 2xk tables, where k>2).}
+\item{row.level}{The index of the row category to be used in odds ratio calculations (1 or 2; default: 1).
+The user must select the row level to which the calculation of the odds ratios make reference (only for 2xk tables, where k >= 2).}
 
 \item{or.alpha}{The significance level used for the odds ratios' confidence intervals (default: 0.05).}
 
@@ -48,7 +48,7 @@ chi-square statistic accross the number of randomized tables set by the B parame
 }
 \value{
 The function produces \strong{optional charts} (distribution of the permuted chi-square statistic
-and a plot of the odds ratios between a reference column level and the other ones, the latter only for 2xk tables), and
+and a plot of the odds ratios between a reference column level and the other ones, the latter only for 2xk tables where k >= 2), and
 a number of \strong{output tables} that are nicely formatted with the help of the \emph{gt} package.
 The output tables are listed below:
 
@@ -137,7 +137,7 @@ The function performs the chi-square (and the G-square) test of independence on 
 calculates various measures of categorical association, returns standardized, moment-corrected standardized, and adjusted
 standardized residuals (with indication of their significance), and calculates relative and absolute contributions to the chi-square.
 The p value associated to the chi-square statistic is also calculated on the basis of a permutation-based procedure.
-Nicely-formatted output tables are rendered.
+Nicely-formatted output tables are rendered. Optionally, in 2xk tables (where k >= 2), a plot of the odds ratios can be rendered.
 }
 \details{
 The following \strong{measures of categorical associations} are produced by the function:
@@ -157,93 +157,104 @@ The following \strong{measures of categorical associations} are produced by the 
   \item Cohen's k (and 95perc confidence interval)
 }
 
-The \strong{p value} of the observed chi-square statistic is also calculated on the basis of a \strong{permutation-based approach},
+\strong{P value of the chi-square statistic}\cr
+The p value of the observed chi-square statistic is also calculated on the basis of a permutation-based approach,
 using \emph{B} random tables created under the Null Hypothesis of independence. For the rationale of this approach,
-see for instance the description in Beh E.J., Lombardo R. 2014, Correspondence Analysis: Theory, Practice
-and New Strategies, Chichester, Wiley: 62-64.\cr
+see for instance the description in Beh-Lombardo 2014: 62-64. The permutation-based p value is calculated as follows: \cr
 
-The \strong{permutation-based p value} is calculated as follows: \cr
-\eqn{(1 + sum (chistat.perm > chisq.stat)) / (1 + B)}, where
+\eqn{(1 + sum (chistat.perm > chisq.stat)) / (1 + B)}, where\cr
+
 \emph{chistat.perm} is a vector storing the B chi-square statistics generated under the Null Hypothesis, and
 \emph{chisq.stat} is the observed chi-square statistic. For the logic of the calculation, see for example
-Baddeley et al., "Spatial Point Patterns. Methodology and Applications with R", CRC Press 2016: 387.\cr
+Baddeley et al. 2016: 387.\cr
 
-The \strong{moment-corrected standardized residuals} are calculated as follows: \cr
-\eqn{stand.res / (sqrt((nr-1)*(nc-1)/(nr*nc)))}, where \emph{stand.res} is each cell's standardized residual, \emph{nr} and
+
+\strong{Moment-corrected standardized residuals}\cr
+The moment-corrected standardized residuals are calculated as follows: \cr
+
+\eqn{stand.res / (sqrt((nr-1)*(nc-1)/(nr*nc)))}, where\cr
+
+\emph{stand.res} is each cell's standardized residual, \emph{nr} and
 \emph{nc} are the number of rows and columns respectively; see
-Garcia-Perez, MA, and Nunez-Anton, V (2003). Cellwise Residual Analysis in Two-Way Contingency Tables. Educational and Psychological Measurement, 63(5): 827.\cr
+Garcia-Perez-Nunez-Anton 2003: 827.\cr
 
-The \strong{adjusted standardized residuals} are calculated as follows: \cr
-\eqn{stand.res[i,j] / sqrt((1-sr[i]/n)*(1-sc[j]/n))}, where \emph{stand.res} is the standardized residual for cell \emph{ij},
+
+\strong{Adjusted standardized residuals}\cr
+The adjusted standardized residuals are calculated as follows: \cr
+
+\eqn{stand.res[i,j] / sqrt((1-sr[i]/n)*(1-sc[j]/n))}, where\cr
+
+\emph{stand.res} is the standardized residual for cell \emph{ij},
 \emph{sr} is the row sum for row \emph{i}, \emph{sc} is the column sum for column \emph{j}, and
 \emph{n} is the table grand total. The \emph{adjusted standardized residuals} may prove useful since it has
 been demonstrated that the standardized residuals tend to underestimate the significance of differences in small samples.
 The adjusted standardized residuals correct that deficiency.\cr
 
-The \strong{significance of the residuals} (standardized, moment-corrected standardized, and adjusted standardized) is assessed using alpha 0.05 or, optionally
+\strong{Significance of the residuals}\cr
+The significance of the residuals (standardized, moment-corrected standardized, and adjusted standardized) is assessed using alpha 0.05 or, optionally
 (by setting the parameter 'adj.alpha' to TRUE),
 using an adjusted alpha calculated using the Sidak's method:\cr
-\eqn{alpha.adj = 1-(1 - 0.05)^(1/(nr*nc))}, where \emph{nr} and \emph{nc} are the number of rows and columns in the table respectively. The adjusted
-alpha is then converted into a critical two-tailed z value. See: Beasley TM and Schumacker RE (1995), Multiple Regression Approach to Analyzing Contingency
-Tables: Post Hoc and Planned Comparison Procedures, The Journal of Experimental Education, 64(1): 86, 89.
 
-The \strong{cells' relative contribution (in percent) to the chi-square statistic} is calculated as:\cr
-\eqn{chisq.values / chisq.stat * 100}, where \emph{chisq.values} and \emph{chisq.stat} are the chi-square
+\eqn{alpha.adj = 1-(1 - 0.05)^(1/(nr*nc))}, where\cr
+
+\emph{nr} and \emph{nc} are the number of rows and columns in the table respectively. The adjusted
+alpha is then converted into a critical two-tailed z value. See: Beasley-Schumacker 1995: 86, 89.\cr
+
+
+\strong{Cells' relative contribution (in percent) to the chi-square statistic}\cr
+The cells' relative contribution (in percent) to the chi-square statistic is calculated as:\cr
+
+\eqn{chisq.values / chisq.stat * 100}, where\cr
+
+\emph{chisq.values} and \emph{chisq.stat} are the chi-square
 value in each individual cell of the table and the value of the chi-square statistic, respectively. The
 \emph{average contribution} is calculated as \eqn{100 / (nr*nc)}, where \emph{nr} and \emph{nc} are the
 number of rows and columns in the table respectively.\cr
 
-The \strong{cells' absolute contribution (in percent) to the chi-square statistic} is calculated as:\cr
-\eqn{chisq.values / n * 100}, where \emph{chisq.values} and \emph{n} are the chi-square
+\strong{Cells' absolute contribution (in percent) to the chi-square statistic}\cr
+The cells' absolute contribution (in percent) to the chi-square statistic is calculated as:\cr
+
+\eqn{chisq.values / n * 100}, where\cr
+
+\emph{chisq.values} and \emph{n} are the chi-square
 value in each individual cell of the table and the table's grant total, respectively. The
 \emph{average contribution} is calculated as sum of all the absolute contributions divided by the number of cells in
-the table. For both the relative and absolute contributions to the chi-square, see
-Beasley and Schumacker (1995): 90.\cr
+the table. For both the relative and absolute contributions to the chi-square, see:
+Beasley-Schumacker 1995: 90.\cr
 
-The calculation of the \strong{95perc confidence interval around Cramer's V} is based on Smithson M.J. (2003). Confidence Intervals,
-Quantitative Applications in the Social Sciences Series, No. 140. Thousand Oaks, CA: Sage, 39-41, and builds on the R code made
+
+\strong{95perc confidence interval around Cramer's V}\cr
+The calculation of the 95perc confidence interval around Cramer's V is based on Smithson 2003: 39-41, and builds on the R code made
 available by the author on the web (http://www.michaelsmithson.online/stats/CIstuff/CI.html).\cr
 
-The \strong{bias-corrected Cramer's V} is based on Bergsma, W. (2013).
-"A bias correction for Cramér's V and Tschuprow's T". Journal of the Korean Statistical Society. 42 (3): 323–328,
-https://doi.org/10.1016%2Fj.jkss.2012.10.002\cr
 
-For the \strong{other measures of categorical association} provided by the function, see for example
-Sheskin, D. J. (2011). Handbook of Parametric and Nonparametric Statistical Procedures, Fifth Edition (5th ed.). Chapman and Hall/CRC: 675-679,
-1415-1427.\cr
+\strong{Bias-corrected Cramer's V}\cr
+The bias-corrected Cramer's V is based on Bergsma 2013: 323–328.\cr
 
-\strong{Note} that:\cr
--the \strong{Phi} coefficient is based on the chi-square statistic as per Sheskin's equation 16.21, whereas the
-\strong{Phi signed} is after Sheskin's equation 16.20;\cr
 
--the \strong{2-sided p value of Yule's Q} is calculated following Sheskin's equation 16.24;\cr
+\strong{Other measures of categorical association}\cr
+For the other measures of categorical association provided by the function, see for example Sheskin 2011: 1415-1427.\cr
 
--\strong{Cohen's w} is calculate as \eqn{V * sqrt(min(nr, nc)-1)}, where \emph{V} is Cramer's V, and  \emph{nr} and  \emph{nc}
-are the number of rows and columns respectively; see Sheskin 2011: 679;\cr
 
--in the output table reporting the result of the chi-square test and the various measures of association, the
-magnitude of the \strong{effect size} according to \emph{Cohen}'s guidelines is reported for Cramer's V, Cramer's V biase-corrected, and for Cohen's w;
-the effect size for the former two coefficients is only reported for tables featuring up to 5 degrees of freedom
-(see Cohen, J. (1988). Statistical power analysis for the behavioral sciences (2nd ed). Hillsdale, N.J: L. Erlbaum Associates);\cr
+\strong{Odds Ratio}\cr
+The odds ratio is calculated for 2x2 tables. In case of zeros along any of the table's diagonal,
+the \emph{Haldane-Anscombe} correction is applied. It consists in adding 0.5 to every cell of the table before calculating the odds ratio.
+For tables of size 2xk (where k >= 2), pairwise odds ratios can be plotted (along with their confidence interval) by
+setting the \code{or.alpha} parameter to \code{TRUE}. The mentioned correction
+is also applied to the calculation of those pairwise odds ratios (for more information on the plot, see further below).
+For the Haldane-Anscombe correction see, for instance, Fleiss-Levin-Paik 2003: 102-103.\cr
 
--the \strong{2-tailed p value} of \strong{Goodman-Kruskal's gamma} is based on the
-associated z-score calculated as per Sheskin's equation 32.2;\cr
 
--the \strong{symmetric} version of \strong{Goodman-Kruskal's lambda} is calculated
-as per Reynolds, H. T. (1984). Analysis of Nominal Data (Quantitative Applications in the Social Sciences) (1st ed.). SAGE Publications: 55-57;\cr
-
--\strong{Goodman-Kruskal's tau} is calculated as per Reynolds 1984: 57-60;\cr
-
--\strong{Cohen's k} is calculated as per Sheskin 2011: 688-689 (equation 16.30).\cr
-
-About the \strong{plot of odds ratios} for 2xk table, where k>2:\cr
+\strong{Odd Ratios plot}\cr
+For 2xk table, where k >= 2:\cr
 by setting the \code{plor.or} parameter to \code{TRUE}, a plot showing the odds ratios and their 95percent confidence interval will be rendered.
 The confidence level can be modified via the \code{or.alpha} parameter. The odds ratios are calculated for the column levels, and one of them
-is to be selected by the user as a reference for comparison via the \code{reference_level} parameter (set to 1 by default).
-Also, the user may want to select the row category to which the calculation of the odds ratios makes reference (using the \code{row_category} parameter,
-which is set to 1 by default).\cr
+is to be selected by the user as a reference for comparison via the \code{reference.level} parameter (set to 1 by default).
+Also, the user may want to select the row category to which the calculation of the odds ratios makes reference (using the \code{row.level} parameter,
+which is set to 1 by default). If any of the pairwisely-generated 2x2 tables on which the odds ratio is calculated
+features zeros along any of the diagonal, the \emph{Haldane-Anscombe} correction is applied (see above). \cr
 
-To better understand the rationale, consider the following example, which rests on the famous Titanic data:\cr
+To better understand the rationale of plotting the odds ratios, consider the following example, which uses on the famous Titanic data:\cr
 
 Create a 2x3 contingency table:\cr
 mytable <- matrix(c(123, 158, 528, 200, 119, 181), nrow = 2, byrow = TRUE)\cr
@@ -251,19 +262,45 @@ colnames(mytable) <- c("1st", "2nd", "3rd")\cr
 rownames(mytable) <- c("Died", "Survived")\cr
 
 Now, we perform the test and visualise the odds ratios:\cr
-chisquare(mytable, plot.or=TRUE, reference_level=1, row_category=1)\cr
+chisquare(mytable, plot.or=TRUE, reference.level=1, row.level=1)\cr
 
 In the rendered plot, we can see the odds ratios and confidence intervals for the second and third column level
 (i.e., 2nd class and 3rd class) because the first column level has been selected as reference level. The odds ratios are calculated
 making reference to the first row category (i.e., \emph{Died}). From the plot, we can see that, compared to the 1st class,
-passenger on the 2nd class have 2.16 times larger odds of dying; passengers on the 3rd class have 4.74 times larger odds of dying
+passengers on the 2nd class have 2.16 times larger odds of dying; passengers on the 3rd class have 4.74 times larger odds of dying
 compared to the 1st class.\cr
 
-Note that if we set the \code{row_category} parameter to \code{2}, we make reference to the second row category, i.e. \emph{Survived}:\cr
-chisquare(mytable, plot.or=TRUE, reference_level=1, row_category=2)\cr
+Note that if we set the \code{row.level} parameter to \code{2}, we make reference to the second row category, i.e. \emph{Survived}:\cr
+chisquare(mytable, plot.or=TRUE, reference.level=1, row.level=2)\cr
 
 In the plot, we can see that passengers in the 2nd class have 0.46 times the odds of surviving of passengers in the 1st class, while
-passengers from the 3rd class have 0.21 times the odds of surviving of those who were travelling in the 1st class.\cr
+passengers from the 3rd class have 0.21 times the odds of surviving of those travelling in the 1st class.\cr
+
+
+
+\strong{Note}\cr
+-the \strong{Phi} coefficient is based on the chi-square statistic as per Sheskin 2011's equation 16.21, whereas the
+\strong{Phi signed} is after Sheskin's equation 16.20;\cr
+
+-the \strong{2-sided p value of Yule's Q} is calculated following Sheskin 2011's equation 16.24;\cr
+
+-\strong{Cohen's w} is calculate as \eqn{V * sqrt(min(nr, nc)-1)}, where \emph{V} is Cramer's V, and  \emph{nr} and  \emph{nc}
+are the number of rows and columns respectively; see Sheskin 2011: 679;\cr
+
+-in the output table reporting the result of the chi-square test and the various measures of association, the
+magnitude of the \strong{effect size} according to \emph{Cohen}'s guidelines is reported for Cramer's V, Cramer's V biase-corrected, and for Cohen's w;
+the effect size for the former two coefficients is only reported for tables featuring up to 5 degrees of freedom
+(see Cohen 1988);\cr
+
+-the \strong{2-tailed p value} of \strong{Goodman-Kruskal's gamma} is based on the
+associated z-score calculated as per Sheskin 2011's equation 32.2;\cr
+
+-the \strong{symmetric} version of \strong{Goodman-Kruskal's lambda} is calculated
+as per Reynolds 1984: 55-57;\cr
+
+-\strong{Goodman-Kruskal's tau} is calculated as per Reynolds 1984: 57-60;\cr
+
+-\strong{Cohen's k} is calculated as per Sheskin 2011: 688-689 (equation 16.30).\cr
 }
 \examples{
 # Perform the test on the in-built 'social_class' dataset
@@ -271,5 +308,26 @@ result <- chisquare(social_class, B=99)
 
 
 
+}
+\references{
+Baddeley et al. 2016. Spatial Point Patterns. Methodology and Applications with R, CRC Press.
+
+Beh E.J., Lombardo R. 2014. Correspondence Analysis: Theory, Practice and New Strategies, Chichester, Wiley.
+
+Beasley TM and Schumacker RE. 1995. Multiple Regression Approach to Analyzing Contingency Tables: Post Hoc and Planned Comparison Procedures. The Journal of Experimental Education, 64(1).
+
+Bergsma, W. 2013. A bias correction for Cramér's V and Tschuprow's T. Journal of the Korean Statistical Society. 42 (3).
+
+Cohen, J. 1988. Statistical power analysis for the behavioral sciences (2nd ed). Hillsdale, N.J: L. Erlbaum Associates.
+
+Fleiss, J. L., Levin, B., & Paik, M. C. 2003. Statistical Methods for Rates and Proportions (3rd ed.). Wiley.
+
+Garcia-Perez, MA, and Nunez-Anton, V. 2003. Cellwise Residual Analysis in Two-Way Contingency Tables. Educational and Psychological Measurement, 63(5).
+
+Reynolds, H. T. 1984. Analysis of Nominal Data (Quantitative Applications in the Social Sciences) (1st ed.). SAGE Publications.
+
+Sheskin, D. J. 2011. Handbook of Parametric and Nonparametric Statistical Procedures, Fifth Edition (5th ed.). Chapman and Hall/CRC.
+
+Smithson M.J. 2003. Confidence Intervals, Quantitative Applications in the Social Sciences Series, No. 140. Thousand Oaks, CA: Sage.
 }
 \keyword{chiperm}

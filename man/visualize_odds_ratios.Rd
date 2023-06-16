@@ -2,21 +2,21 @@
 % Please edit documentation in R/visualize_odds_ratios.R
 \name{visualize_odds_ratios}
 \alias{visualize_odds_ratios}
-\title{Visualize Odds Ratios for a 2xk Contingency Table (internal function)}
+\title{Visualize Odds Ratios for a 2xk (where k >= 2) Contingency Table (internal function)}
 \usage{
 visualize_odds_ratios(
   ctable,
-  reference_level = 1,
-  row_category = 1,
+  reference.level = 1,
+  row.level = 1,
   or.alpha = 0.05
 )
 }
 \arguments{
-\item{ctable}{A 2xk contingency table as a matrix or data frame with row and column names. The table must have dimensions of at least 2x3.}
+\item{ctable}{A 2xk (where k >= 2) contingency table as a matrix or data frame with row and column names.}
 
-\item{reference_level}{The index of the reference level for odds ratio calculations (default: 1). The user must select the column level to serve as the reference level.}
+\item{reference.level}{The index of the reference level for odds ratio calculations (default: 1). The user must select the column level to serve as the reference level.}
 
-\item{row_category}{The index of the row category to be used in odds ratio calculations (1 or 2). The user must select the row level to which the calculation of the odds ratios make reference (default: 1).}
+\item{row.level}{The index of the row category to be used in odds ratio calculations (1 or 2). The user must select the row level to which the calculation of the odds ratios make reference (default: 1).}
 
 \item{or.alpha}{The significance level used for the confidence intervals (default: 0.05).}
 }
@@ -25,6 +25,6 @@ A plot of odds ratios with 95% confidence intervals for a 2xk contingency table.
 }
 \description{
 This function creates a plot of odds ratios with 95% confidence intervals
-for a 2xk contingency table.
+for a 2xk (where k >= 2) contingency table.
 }
 \keyword{internal}

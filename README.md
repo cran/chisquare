@@ -1,4 +1,9 @@
-# chisquare 0.4
+# chisquare 0.5
+
+vers 0.4
+* the facility to plot the odds ratios and 95% confidence intervals for table of size 2xk (where k>2) has been added;
+* the above added facility rests on a new internal function (visualize_odds_ratios);
+* amendments and updates to the help documentation.
 
 vers 0.3
 * Moment-corrected standardized residuals added;

@@ -1,11 +1,11 @@
-#' Visualize Odds Ratios for a 2xk Contingency Table (internal function)
+#' Visualize Odds Ratios for a 2xk (where k >= 2) Contingency Table (internal function)
 #'
 #' This function creates a plot of odds ratios with 95% confidence intervals
-#' for a 2xk contingency table.
+#' for a 2xk (where k >= 2) contingency table.
 #'
-#' @param ctable A 2xk contingency table as a matrix or data frame with row and column names. The table must have dimensions of at least 2x3.
-#' @param reference_level The index of the reference level for odds ratio calculations (default: 1). The user must select the column level to serve as the reference level.
-#' @param row_category The index of the row category to be used in odds ratio calculations (1 or 2). The user must select the row level to which the calculation of the odds ratios make reference (default: 1).
+#' @param ctable A 2xk (where k >= 2) contingency table as a matrix or data frame with row and column names.
+#' @param reference.level The index of the reference level for odds ratio calculations (default: 1). The user must select the column level to serve as the reference level.
+#' @param row.level The index of the row category to be used in odds ratio calculations (1 or 2). The user must select the row level to which the calculation of the odds ratios make reference (default: 1).
 #' @param or.alpha The significance level used for the confidence intervals (default: 0.05).
 #'
 #' @return A plot of odds ratios with 95% confidence intervals for a 2xk contingency table.
@@ -13,25 +13,29 @@
 #' @keywords internal
 #'
 #' @importFrom graphics axis lines text
-#' @importFrom stats chisq.test
 #'
 #'
-visualize_odds_ratios <- function(ctable, reference_level = 1, row_category = 1, or.alpha = 0.05) {
+visualize_odds_ratios <- function(ctable, reference.level = 1, row.level = 1, or.alpha = 0.05) {
   # Convert data frame to matrix if needed
   if (is.data.frame(ctable)) {
     ctable <- as.matrix(ctable)
   }
 
-  if (!any(dim(ctable) == 2) || ncol(ctable) < 3) {
-    stop("The input cross-tab must have dimensions of at least 2x3.")
+  if (!any(dim(ctable) == 2) || ncol(ctable) < 2) {
+    stop("To plot the odds ratios, the input cross-tab must have dimension 2xk (where k >= 2).
+         You can either enter a different cross-tab or subset the existing one.")
   }
 
-  if (row_category != 1 && row_category != 2) {
-    stop("Invalid row_category. Must be either 1 or 2.")
+  if (reference.level > ncol(ctable)) {
+    stop(paste0("Invalid reference.level. It must be between 1 and ", ncol(ctable), "."))
   }
 
-  # Extract row_category name
-  rc_name <- rownames(ctable)[row_category]
+  if (row.level != 1 && row.level != 2) {
+    stop("Invalid row.level. It must be either 1 or 2.")
+  }
+
+  # Extract row.level name
+  rc_name <- rownames(ctable)[row.level]
 
   # Extract level names
   level_names <- colnames(ctable)
@@ -48,14 +52,19 @@ visualize_odds_ratios <- function(ctable, reference_level = 1, row_category = 1,
   upper_bounds <- c()
 
   for (i in 1:n_levels) {
-    if (i != reference_level) {
-      if (row_category == 1) {
-        odds_ratio <- (ctable[1, i] * ctable[2, reference_level]) / (ctable[1, reference_level] * ctable[2, i])
+    if (i != reference.level) {
+      # Check for zeros along the diagonal of the 2x2 table
+      if (ctable[1, i] * ctable[2, reference.level] == 0 || ctable[1, reference.level] * ctable[2, i] == 0) {
+        # Add 0.5 to every cell of the 2x2 table
+        ctable_sub <- ctable[c(row.level, 3 - row.level), c(i, reference.level)] + 0.5
       } else {
-        odds_ratio <- (ctable[2, i] * ctable[1, reference_level]) / (ctable[2, reference_level] * ctable[1, i])
+        ctable_sub <- ctable[c(row.level, 3 - row.level), c(i, reference.level)]
       }
 
-      se <- sqrt(sum(1 / ctable[c(row_category, 3 - row_category), c(i, reference_level)]))
+      # Corrected odds_ratio calculation
+      odds_ratio <- (ctable_sub[1, 1] * ctable_sub[2, 2]) / (ctable_sub[1, 2] * ctable_sub[2, 1])
+
+      se <- sqrt(sum(1 / ctable_sub))
       z <- qnorm(1 - or.alpha / 2)
 
       lower_bounds <- append(lower_bounds, exp(log(odds_ratio) - z * se))
@@ -68,19 +77,14 @@ visualize_odds_ratios <- function(ctable, reference_level = 1, row_category = 1,
     odds_ratios <- append(odds_ratios, odds_ratio)
   }
 
-  # Perform Chi-square test
-  chisq_test <- chisq.test(ctable)
 
   # Create the visualization
   plot(NULL, xlim = c(0.5, n_levels + 0.5), ylim = c(0, max(upper_bounds, na.rm = TRUE) * 1.2),
        xlab = "", ylab = "Odds Ratios", xaxt = 'n', yaxt = 'n',
-       main = "Odds Ratios with 95% Confidence Intervals", cex.main = 0.9,
-       sub = paste0("Chi-square: ", round(chisq_test$statistic, 2),
-                    ", df: ", chisq_test$parameter,
-                    ", p-value: ", format.pval(chisq_test$p.value, digits = 3),
-                    "\nThe ORs are relative to the '", rc_name, "' row level",
-                    "\nReference column level: ", level_names[reference_level]),
-                     cex.sub = 0.6)
+       main = "Odds Ratios with 95% Confidence Intervals", cex.main = 0.85,
+       sub = paste0("The ORs are relative to the '", rc_name, "' row level",
+                    "\nReference column level: '", level_names[reference.level], "'"),
+       cex.sub = 0.6)
 
   axis(1, at = 1:n_levels, labels = level_names, cex.axis = 0.8)
   axis(2, las = 1, at = round(seq(0, max(upper_bounds, na.rm = TRUE) * 1.2, by = max(upper_bounds, na.rm = TRUE) * 0.2), 2), cex.axis = 0.8)
@@ -98,4 +102,3 @@ visualize_odds_ratios <- function(ctable, reference_level = 1, row_category = 1,
   # Add reference line at y = 1 and tick mark
   abline(h = 1, lty = 2, col = "gray")
 }
-
