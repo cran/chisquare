@@ -2,7 +2,7 @@
 % Please edit documentation in R/chisquare.r
 \name{chisquare}
 \alias{chisquare}
-\title{R function for chi-square and G-square test of independence, measures of association, and standardized/moment-corrected
+\title{R function for chi-square, (N-1) chi-square, and G-square test of independence, measures of association, and standardized/moment-corrected
 standardized/adjusted standardized residuals, visualisation of odds ratio in 2xk tables (where k >= 2)}
 \usage{
 chisquare(
@@ -68,18 +68,20 @@ The output tables are listed below:
 Also, the function returns a \strong{list containing the following elements}:
  \itemize{
   \item \emph{crosstab}: input contingency table
-  \item \emph{exp.freq.}: table of expected frequencies
+  \item \emph{exp.freq}: table of expected frequencies
   \item \emph{chisq.values}: cells' chi-square value
-  \item \emph{chisq.relat.contrib.}: cells' relative contribution (in percent) to the chi-square statistic
-  \item \emph{chisq.abs.contrib.}: cells' absolute contribution (in percent) to the chi-square statistic
+  \item \emph{chisq.relat.contrib}: cells' relative contribution (in percent) to the chi-square statistic
+  \item \emph{chisq.abs.contrib}: cells' absolute contribution (in percent) to the chi-square statistic
   \item \emph{chisq.statistic}: observed chi-square value
   \item \emph{chisq.p.value}: p value of the chi-square statistic
-  \item \emph{chisq.p.value.perm.}: p value based on B permuted tables
+  \item \emph{chisq.p.value.perm}: p value based on B permuted tables
+  \item \emph{chisq.adj}: chi-square statistic adjusted using the (N-1)/N correction
+  \item \emph{chisq.adj.p.value}: p.value of the adjusted chi-square statistic
   \item \emph{Gsq.statistic}: observed G-square value
   \item \emph{Gsq.p.value}: p value of the G-square statistic
   \item \emph{stand.resid.}: table of standardized residuals
-  \item \emph{mom.corr.stand.resid.}: table of moment-corrected standardized residuals
-  \item \emph{adj.stand.resid.}: table of adjusted standardized residuals
+  \item \emph{mom.corr.stand.resid}: table of moment-corrected standardized residuals
+  \item \emph{adj.stand.resid}: table of adjusted standardized residuals
   \item \emph{Phi}: Phi coefficient (only for 2x2 tables)
   \item \emph{Phi signed}: signed Phi coefficient (only for 2x2 tables)
   \item \emph{Yule's Q}: Q coefficient (only for 2x2 tables)
@@ -88,6 +90,7 @@ Also, the function returns a \strong{list containing the following elements}:
   \item \emph{Odds ratio CI lower boundary}: lower boundary of the 95perc CI
   \item \emph{Odds ratio CI upper boundary}: upper boundary of the 95perc CI
   \item \emph{Odds ratio p.value}: p value of the odds ratio
+  \item \emph{Odds ratio effect size}: magnitude of the odds ratio effect size
   \item \emph{Cadj}: adjusted contigency coefficient C
   \item \emph{Cramer's V}: Cramer's V coefficient
   \item \emph{Cramer's V CI lower boundary}: lower boundary of the 95perc CI
@@ -109,7 +112,7 @@ Also, the function returns a \strong{list containing the following elements}:
 \strong{Note} that the \emph{p values} returned in the above list are expressed in scientific notation, whereas the ones reported in the
 output table featuring the tests' result and measures of association are reported as broken down into classes (e.g., <0.05, or <0.01, etc).\cr
 
-The \strong{following examples}, which use in-built datasets, can be run to fimiliarise with the function:\cr
+The \strong{following examples}, which use in-built datasets, can be run to familiarise with the function:\cr
 
 -perform the test on the in-built 'social_class' dataset\cr
 result <- chisquare(social_class)\cr
@@ -133,9 +136,9 @@ OPINION=c(rep("oppose", 235),\cr
 result <- chisquare(mytable, format="long")\cr
 }
 \description{
-The function performs the chi-square (and the G-square) test of independence on the input contingency table,
-calculates various measures of categorical association, returns standardized, moment-corrected standardized, and adjusted
-standardized residuals (with indication of their significance), and calculates relative and absolute contributions to the chi-square.
+The function performs the chi-square test (both in its original format and in the N-1 version) and the G-square test of independence
+on the input contingency table. It also calculates various measures of categorical association, returns standardized, moment-corrected standardized,
+and adjusted standardized residuals (with indication of their significance), and calculates relative and absolute contributions to the chi-square.
 The p value associated to the chi-square statistic is also calculated on the basis of a permutation-based procedure.
 Nicely-formatted output tables are rendered. Optionally, in 2xk tables (where k >= 2), a plot of the odds ratios can be rendered.
 }
@@ -145,7 +148,7 @@ The following \strong{measures of categorical associations} are produced by the 
   \item Phi (only for 2x2 tables)
   \item Phi signed (only for 2x2 tables)
   \item Yule's Q (and p value; only for 2x2 tables)
-  \item Odds ratio (with 95perc confidence interval and p value; only for 2x2 tables)
+  \item Odds ratio (with 95perc confidence interval, p value, and indication of the magnitude of the effect size; only for 2x2 tables)
   \item Adjusted contingency coefficient C
   \item Cramer's V (with 95perc confidence interval; indication of the magnitude of the effect size according to Cohen is provided for tables with up to 5 degrees of freedom)
   \item Bias-corrected Cramer's V (indication of the magnitude of the effect size according to Cohen is provided for tables with up to 5 degrees of freedom)
@@ -167,6 +170,13 @@ see for instance the description in Beh-Lombardo 2014: 62-64. The permutation-ba
 \emph{chistat.perm} is a vector storing the B chi-square statistics generated under the Null Hypothesis, and
 \emph{chisq.stat} is the observed chi-square statistic. For the logic of the calculation, see for example
 Baddeley et al. 2016: 387.\cr
+
+\strong{Chi-square statistics adjusted using the (N-1)/N correction}\cr
+The correction is done by dividing the chi-square statistics by (N-1)/N, where N is the table grand total (sample size). The p.value
+of the corrected statistic is calculated the regular way. The correction seems particularly relevant for tables where N is smaller than
+20 and where the expected frequencies are equal or larger than 1. The corrected chi-square test proves more conservative when the sample size
+is small. As N increases, the term (N-1)/N approaches 1, making the adjusted chi-square value virtually equivalent to the unadjusted value.
+See: Upton 1982; Rhoades-Overall1982; Campbel 2007; Richardson 2011. \cr
 
 
 \strong{Moment-corrected standardized residuals}\cr
@@ -244,6 +254,16 @@ setting the \code{or.alpha} parameter to \code{TRUE}. The mentioned correction
 is also applied to the calculation of those pairwise odds ratios (for more information on the plot, see further below).
 For the Haldane-Anscombe correction see, for instance, Fleiss-Levin-Paik 2003: 102-103.\cr
 
+\strong{Odds Ratio effect size magnitude}\cr
+The magnitude of the effect indicated by the odds ratio is based on the thresholds (and corresponding reciprocal)
+suggested by Chen et al 2010:\cr
+
+ \itemize{
+  \item OR < 1.68 - Very small
+  \item 1.68 <= OR < 3.47 - Small
+  \item 3.47 <= OR < 6.71 - Medium
+  \item OR >= 6.71 - Large
+}
 
 \strong{Odd Ratios plot}\cr
 For 2xk table, where k >= 2:\cr
@@ -307,6 +327,10 @@ as per Reynolds 1984: 55-57;\cr
 result <- chisquare(social_class, B=99)
 
 
+# Perform the test on a 2x2 subset
+result <- chisquare(social_class[c(1:2), c(1:2)], B=99)
+
+
 
 }
 \references{
@@ -314,9 +338,16 @@ Baddeley et al. 2016. Spatial Point Patterns. Methodology and Applications with 
 
 Beh E.J., Lombardo R. 2014. Correspondence Analysis: Theory, Practice and New Strategies, Chichester, Wiley.
 
-Beasley TM and Schumacker RE. 1995. Multiple Regression Approach to Analyzing Contingency Tables: Post Hoc and Planned Comparison Procedures. The Journal of Experimental Education, 64(1).
+Beasley TM and Schumacker RE. 1995. Multiple Regression Approach to Analyzing Contingency Tables: Post Hoc and Planned Comparison Procedures.
+The Journal of Experimental Education, 64(1).
 
 Bergsma, W. 2013. A bias correction for Cramér's V and Tschuprow's T. Journal of the Korean Statistical Society. 42 (3).
+
+ @references Campbell, I. (2007). Chi-squared and Fisher–Irwin tests of two-by-two tables with small sample recommendations.
+In Statistics in Medicine (Vol. 26, Issue 19, pp. 3661–3675).
+
+Chen, H., Cohen, P., and Chen, S. (2010). How Big is a Big Odds Ratio? Interpreting the Magnitudes of Odds Ratios in Epidemiological Studies.
+In Communications in Statistics - Simulation and Computation (Vol. 39, Issue 4, pp. 860–864).
 
 Cohen, J. 1988. Statistical power analysis for the behavioral sciences (2nd ed). Hillsdale, N.J: L. Erlbaum Associates.
 
@@ -326,8 +357,16 @@ Garcia-Perez, MA, and Nunez-Anton, V. 2003. Cellwise Residual Analysis in Two-Wa
 
 Reynolds, H. T. 1984. Analysis of Nominal Data (Quantitative Applications in the Social Sciences) (1st ed.). SAGE Publications.
 
+Rhoades, H. M., & Overall, J. E. (1982). A sample size correction for Pearson chi-square in 2×2 contingency tables. In Psychological Bulletin (Vol. 91, Issue 2, pp. 418–423).
+American Psychological Association (APA).
+
+Richardson, J. T. E. (2011). The analysis of 2 × 2 contingency tables-Yet again. In Statistics in Medicine (Vol. 30, Issue 8, pp. 890–890).
+
 Sheskin, D. J. 2011. Handbook of Parametric and Nonparametric Statistical Procedures, Fifth Edition (5th ed.). Chapman and Hall/CRC.
 
 Smithson M.J. 2003. Confidence Intervals, Quantitative Applications in the Social Sciences Series, No. 140. Thousand Oaks, CA: Sage.
+
+Upton, G. J. G. (1982). A Comparison of Alternative Tests for the 2 × 2 Comparative Trial. In Journal of the Royal Statistical Society.
+Series A (General) (Vol. 145, Issue 1, p. 86).
 }
 \keyword{chiperm}
