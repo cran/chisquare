@@ -1,4 +1,11 @@
-# chisquare 0.6
+# chisquare 0.7
+
+
+vers 0.6
+* chi-square test adjusted by the (N-1)/N correction added;
+* magnitude of the effect size as indicated by the odds ratio added;
+* help documentation updated, and improved content-wise;
+* relevant scholarly references added.
 
 vers 0.5
 * the plot of odds ratios is now returned for cross-tabs featuring 2 rows and at least 2 columns;
