@@ -7,7 +7,7 @@ standardized/adjusted standardized residuals, visualisation of odds ratio in 2xk
 \usage{
 chisquare(
   data,
-  B = 999,
+  B = 1000,
   plot.or = FALSE,
   reference.level = 1,
   row.level = 1,
@@ -15,13 +15,14 @@ chisquare(
   adj.alpha = FALSE,
   format = "short",
   graph = FALSE,
+  oneplot = TRUE,
   tfs = 14
 )
 }
 \arguments{
 \item{data}{Dataframe containing the input contingency table.}
 
-\item{B}{Number of simulated tables to be used to calculate the Monte Carlo-based p value (999 by default).}
+\item{B}{Number of simulated tables to be used to calculate the permutation- and the Monte Carlo-based p value (1000 by default).}
 
 \item{plot.or}{Takes TRUE or FALSE (default) if the user wants a plot of the odds ratios to be rendered (only for 2xk tables, where k >= 2).}
 
@@ -41,8 +42,11 @@ input dataset is a dataframe storing two columns that list the levels of the two
 \emph{long} will preliminarily cross-tabulate the levels of the categorical variable in the 1st column against
 the levels of the variable stored in the 2nd column.}
 
-\item{graph}{Takes TRUE or FALSE (default) if the user wants or does not want to chart the distribution of the permuted
-chi-square statistic accross the number of randomized tables set by the B parameter.}
+\item{graph}{Takes TRUE or FALSE (default) if the user wants or does not want to plot the permutation and Monte Carlo
+distribution of the chi-square statistic accross the number of simulated tables set by the B parameter.}
+
+\item{oneplot}{Takes TRUE (default) or FALSE if the user wants or does not want to render of the permutation and Monte Carlo
+distribution in the same plot.}
 
 \item{tfs}{Numerical value to set the size of the font used in the main body of the various output tables (14 by default).}
 }
@@ -74,12 +78,17 @@ Also, the function returns a \strong{list containing the following elements}:
   \item \strong{chi.sq.related.results}:
     \itemize{
       \item \emph{exp.freq}: table of expected frequencies.
+      \item \emph{smallest.exp.freq}: smallest expected frequency.
+      \item \emph{avrg.exp.freq}: average expected frequency.
       \item \emph{chisq.values}: cells' chi-square value.
       \item \emph{chisq.relat.contrib}: cells' relative contribution (in percent) to the chi-square statistic.
       \item \emph{chisq.abs.contrib}: cells' absolute contribution (in percent) to the chi-square statistic.
       \item \emph{chisq.statistic}: observed chi-square value.
       \item \emph{chisq.p.value}: p value of the chi-square statistic.
-      \item \emph{chisq.p.value.MC}: Monte Carlo p value, based on B permuted tables.
+      \item \emph{chisq.p.value.perm}: permutation-based p value, based on B permuted tables.
+      \item \emph{chisq.p.value.perm CI lower boundary}: lower boundary of the 95 percent CI around the permutation-based p value.
+      \item \emph{chisq.p.value.perm CI upper boundary}: upper boundary of the 95 percent CI around the permutation-based p value.
+      \item \emph{chisq.p.value.MC}: Monte Carlo p value, based on B random tables.
       \item \emph{chisq.p.value.MC CI lower boundary}: lower boundary of the 95 percent CI around the Monte Carlo p value.
       \item \emph{chisq.p.value.MC CI upper boundary}: upper boundary of the 95 percent CI around the Monte Carlo p value.
       \item \emph{chisq.adj}: chi-square statistic adjusted using the (N-1)/N correction.
@@ -166,8 +175,8 @@ result <- chisquare(mytable, format="long")\cr
 The function performs the chi-square test (both in its original format and in the N-1 version) and the G-square test of independence
 on the input contingency table. It also calculates various measures of categorical association, returns standardized, moment-corrected standardized,
 and adjusted standardized residuals (with indication of their significance), and calculates relative and absolute contributions to the chi-square.
-The p value associated to the chi-square statistic is also calculated via a Monte Carlo method. The 95 percent confidence interval around the
-simulated p value is also calculated. Nicely-formatted output tables are rendered. Optionally, in 2xk tables (where k >= 2), a plot of the odds ratios can be rendered.\cr
+The p value associated to the chi-square statistic is also calculated via both a permutation- and a Monte Carlo-based method. The 95 percent confidence interval around those
+p values is also calculated. Nicely-formatted output tables are rendered. Optionally, in 2xk tables (where k >= 2), a plot of the odds ratios can be rendered.\cr
 Visit this \href{https://drive.google.com/file/d/1WxRUOpKUGcHW8OwMJLS_uy5QmLaCplCa/view?usp=sharing}{LINK} to access the package's vignette.\cr
 }
 \details{
@@ -189,73 +198,127 @@ The function produces the following \strong{measures of categorical associations
   \item Cohen's k (with 95perc confidence interval)
 }
 
-\strong{Indication of the magnitude of the effect size for coefficients of association}\cr
-The function provides the effect size for the Phi, Phi corrected, Phi signed, Cadj, Cramer's V, Cramer's V bias-corrected,
+\strong{Indication of the magnitude of the association as indicated by the coefficients}\cr
+The function provides indication of the mangitude of the association (effect size) for the Phi, Phi corrected, Phi signed, Cadj, Cramer's V, Cramer's V bias-corrected,
 Cohen's w, W, and for the Odds Ratio.\cr
 
-With the exception of the latter two (for which see further down), the effect size for the other measures of association
-is based on Cohen 1988. For a useful summary of the approach used, refer to Sheskin 2011, 675 and following pages. \cr
+With the exception of the latter (for which see further down), the effect size for the other measures of association
+is based on Cohen 1988.\cr
 
-While Phi, Phi corrected, Phi signed, and w are assessed against the well-known Cohen's classification
-scheme (small 0.1, medium 0.3, large 0.5), Cadj and the two versions of V are preliminary turned into Cohen's w before attaching
-either the "small effect", or "medium effect", or "large effect" label.\cr
+Phi, Phi corrected, Phi signed, and w are assessed against the well-known Cohen's classification
+scheme's thresholds (small 0.1, medium 0.3, large 0.5). For input cross-tabs larger than 2x2, the Cadj, V, V bias-corrected, and W coefficients
+are assessed against thresholds that depend on the table's df, which (as per Cohen 1988) correspond to the smaller between the rows and columns number,
+minus 1. On the basis of the table's df, the three thresholds are calculated as follows: \cr
 
-For instance, using the in-built 'social_class' 3x4 cross-tab,
-Cramer's V is 0.233. Before attaching an effect size label, V is turned into w by multiplying it by the square root of the number of rows or columns,
-whichever is smaller, minus 1. Therefore, the value of V that has to be given a label would translate into 0.233*sqrt(3-1)=0.33. The latter,
-according to Cohen's guidelines, can be labelled as pointing to a "medium effect". The bias-corrected version of V is 0.21, which
-would translate into 0.21*sqrt(3-1)=0.296 which, in turn, can be labelled as indicating a "small effect".\cr
+small effect: 0.100 / sqrt(min(nr,nc)-1)\cr
+medium effect: 0.300 / sqrt(min(nr,nc)-1)\cr
+large effect: 0.500 / sqrt(min(nr,nc)-1)\cr
 
-It is important to note that, when working with V, the transformation into w involves (as said) multiplying the V value by the square root of the lesser
-between the number of rows or columns in the table, minus one. This number essentially represents the dimensionality of the table.\cr
+where nr and nc are the number of rows and number of columns respectively, and min(nr,nc)-1 corresponds to the table's df.
+Essentially, the thresholds for a small, medium, and large effect are computed by dividing the Cohen's thresholds for a 2x2 table (df=1)
+by the square root of the input table's df.\cr
 
-Consider a V value of 0.35. The way it translates to w, and subsequently its effect size interpretation, can change based on the table's dimensionality:\cr
-for a 2x2 table: w=0.35*sqrt(2-1)=0.35, indicating a "medium" effect;\cr
-for a 3x3 table: w=0.35*sqrt(2-1)=0.49, still falling under the "medium" effect category;\cr
-for a 4x4 table: w=0.35*sqrt(4-1)=0.61, which now is interpreted as a "large" effect.\cr
+Consider a V value of (say) 0.35; its effect size interpretation changes based on the table's dimensionality:\cr
 
-The examples illustrate that the larger the table dimensionality (i.e., more rows or columns), the larger the 'w' value will be for a given V.
-This means that for the same V value, the interpreted effect size can shift from "medium" in a smaller table to "large" in a larger table.
-It is crucial to be aware of this as it highlights that the same V value can imply different magnitudes of effect depending on the table's dimensionality.\cr
+for a 2x2 table, 0.35 corresponds to a "medium" effect;\cr
+for a 3x3 table, 0.35 still corresponds to a "medium" effect;\cr
+for a 4x4 table, 0.35 corresponds to a "large" effect.\cr
 
+The examples illustrate that for the same (say) V value, the interpreted effect size can shift from "medium" in a smaller table to "large" in a larger table.
 In simpler terms, the threshold for determining a "large" effect, for instance, becomes more accessible to reach as the table's size increases.\cr
 
-Cadj is turned into w as follows: sqrt(Cadj^2/(1-Cadj^2)).\cr
+It is crucial to be aware of this as it highlights that the same coefficient value can imply different magnitudes of effect depending on the table's dimensionality.\cr
 
-For more details on the entire approach, refer to Sheskin 2011 cited above.
-
-
-\strong{Monte Carlo p-value for the chi-square statistic}\cr
-The p-value of the observed chi-square statistic is also calculated on the basis of a Monte Carlo (permutation-based) approach,
-using \emph{B} random tables created under the Null Hypothesis of independence. \cr For the rationale of this approach,
-see for instance the description in Beh-Lombardo 2014: 62-64. The permutation-based p value is calculated as follows: \cr
-
-\eqn{(1 + sum (chistat.perm > chisq.stat)) / (1 + B)}, where\cr
-
-\emph{chistat.perm} is a vector storing the B chi-square statistics generated under the Null Hypothesis, and
-\emph{chisq.stat} is the observed chi-square statistic. \cr For the logic of the calculation, see for example
-Baddeley et al. 2016: 387.\cr
+See: Cohen 1988; Sheskin 2011.
 
 
- \strong{Confidence interval around the Monte Carlo p-value}\cr
-The function calculates the 95 percent Confidence Interval around the Monte Carlo p-value.
-The Wald CI quantifies the uncertainty around the Monte Carlo p-value estimate. For a 95 percent CI,
-the standard z-value of 1.96 is used.The standard error for the estimated p-value is computed as the square root of
-(estimated p-value * (1 - estimated p-value) / number of simulations).
+ \strong{Suggestion of a suitable chi-square testing method}\cr
+The first rendered table includes a suggestion for the applicable chi-squared test method,
+derived from an internal analysis of the input contingency table. The decision logic used is as follows:\cr
+
+For 2x2 Tables:\cr
+- if the grand total is equal to or larger than 5 times the number of cells,
+  the traditional Chi-Square test is suggested. Permutation or Monte Carlo
+  methods can also be considered.\cr
+
+- if the grand total is smaller than 5 times the number of cells, the minimum expected count is checked:\cr
+(A) if it is equal to or larger than 1, the (N-1)/N adjusted Chi-Square test is
+    suggested, with an option for Permutation or Monte Carlo methods.\cr
+(B) if it is less than 1, the Permutation or Monte Carlo method is recommended.\cr
+
+For Larger than 2x2 Tables:\cr
+- the logic is similar to that for 2x2 tables, with the same criteria for
+  suggesting the traditional Chi-Square test, the (N-1)/N adjusted test,
+  or the Permutation or Monte Carlo methods.\cr
+
+The rationale of a threshold for the applicability of the traditional chi-square test corresponding to
+5 times the number of cells is based on the following.\cr
+
+Literature indicates that the traditional chi-squared test's validity is not as fragile as once thought,
+especially when considering the average expected frequency across all cells in the cross-tab, rather than
+the minimum expected value in any single cell. An average expected frequency of at least 5 across all
+cells of the input table should be sufficient for maintaining the chi-square test's reliability at the
+0.05 significance level.\cr
+
+As a consequence, a table's grand total equal to or larger than 5 times the number of cells should ensure the applicability
+of the traditional chi-square test (at alpha 0.05).\cr
+
+See: Roscoe-Byars 1971; Greenwood-Nikulin 1996; Zar 2014.\cr
+
+For the rationale of the use of the (N-1)/N adjusted version of the chi-square test,
+and for the permutation and Monte Carlo method, see below.\cr
+
+
+\strong{Chi-square statistics adjusted using the (N-1)/N adjustment}\cr
+The adjustment is done by multiplying the chi-square statistics by (N-1)/N, where N is the table grand total (sample size). The p-value
+of the corrected statistic is calculated the regular way (i.e., using the same degrees of freedom as in the traditional test).
+The correction seems particularly relevant for tables where N is smaller than 20 and where the expected frequencies are equal
+or larger than 1. The corrected chi-square test proves more conservative when the sample size is small.
+As N increases, the term (N-1)/N approaches 1, making the adjusted chi-square value virtually equivalent to the unadjusted value.\cr
+
+See: Upton 1982; Rhoades-Overall1982; Campbel 2007; Richardson 2011. \cr
+
+
+\strong{Permutation-based and Monte Carlo p-value for the chi-square statistic}\cr
+The p-value of the observed chi-square statistic is also calculated on the basis of both a permutation-based and a
+Monte Carlo approach. In the first case, the dataset is permuted \emph{B} times (1000 by default), whereas in the second method
+\emph{B} establishes the number of random tables generated under the null hypothesis of independence (1000 by default).\cr
+
+As for the permutation method, the function does the following internally:\cr
+(1) Converts the input dataset to long format and expands to individual observations; \cr
+(2) Calculates the observed chi-squared statistic; \cr
+(3) Randomly shuffles (B times) the labels of the levels of one variable, and recalculates chi-squared statistic for each shuffled dataset;
+(4) Computes the p-value based on the distribution of permuted statistics (see below).\cr
+
+For the rationale of the permutation-based approach, see for instance Agresti et al 2022.\cr
+
+For the rationale of the Monte Carlo approach, see for instance the description in Beh-Lombardo 2014: 62-64.\cr
+
+Both simulated p-values are calculated as follows: \cr
+
+\eqn{sum (chistat.simulated >= chisq.stat) / B}, where\cr
+
+\emph{chistat.simulated} is a vector storing the B chi-squared statistics generated under the Null Hypothesis, and\cr
+\emph{chisq.stat} is the observed chi-squared statistic.\cr
+
+Both distributions can be optionally plotted setting the \code{graph} parameter to \code{TRUE}.\cr
+
+
+ \strong{Confidence interval around the permutation-based and Monte Carlo p-value}\cr
+The function calculates the 95 percent Confidence Interval around the simulated p-values.
+The Wald CI quantifies the uncertainty around the simulated p-value estimate. For a 95 percent CI,
+the standard z-value of 1.96 is used. The standard error for the estimated p-value is computed as the square root of
+(estimated p-value * (1 - estimated p-value) / number of simulations-1).
 
 The lower and upper bounds of the CI are then calculated as follows:\cr
 Lower Confidence Interval = estimated p-value - (z-value * standard error)\cr
 Upper Confidence Interval = estimated p-value + (z-value * standard error)\cr
 
-Finally, the lower and upper CIs are clipped to lie within 0 and 1.
+Finally, the lower and upper CIs are clipped to lie within 0 and 1.\cr
 
+The implemented procedure aligns with the one described at this link:
+https://blogs.sas.com/content/iml/2015/10/28/simulation-exact-tables.html\cr
 
-\strong{Chi-square statistics adjusted using the (N-1)/N correction}\cr
-The correction is done by multiplying the chi-square statistics by (N-1)/N, where N is the table grand total (sample size). The p-value
-of the corrected statistic is calculated the regular way. The correction seems particularly relevant for tables where N is smaller than
-20 and where the expected frequencies are equal or larger than 1. The corrected chi-square test proves more conservative when the sample size
-is small. As N increases, the term (N-1)/N approaches 1, making the adjusted chi-square value virtually equivalent to the unadjusted value.\cr
-See: Upton 1982; Rhoades-Overall1982; Campbel 2007; Richardson 2011. \cr
 
 
 \strong{Moment-corrected standardized residuals}\cr
@@ -264,8 +327,9 @@ The moment-corrected standardized residuals are calculated as follows: \cr
 \eqn{stand.res / (sqrt((nr-1)*(nc-1)/(nr*nc)))}, where\cr
 
 \emph{stand.res} is each cell's standardized residual, \emph{nr} and
-\emph{nc} are the number of rows and columns respectively.\cr See
-Garcia-Perez-Nunez-Anton 2003: 827.\cr
+\emph{nc} are the number of rows and columns respectively.\cr
+
+See Garcia-Perez-Nunez-Anton 2003: 827.\cr
 
 
 \strong{Adjusted standardized residuals}\cr
@@ -278,18 +342,22 @@ The adjusted standardized residuals are calculated as follows: \cr
 \emph{n} is the table grand total. The \emph{adjusted standardized residuals} should be used in place of
 the standardised residuals since the latter are not truly standarised because they have a nonunit variance. The
 standardised residuals therefore underestimate the divergence between the observed and the expected counts. The adjusted
-standardized residuals (and the moment-corrected ones) correct that deficiency.\cr For more info see: Haberman 1973.\cr
+standardized residuals (and the moment-corrected ones) correct that deficiency.\cr
+
+For more info see: Haberman 1973.\cr
 
 
 \strong{Significance of the residuals}\cr
 The significance of the residuals (standardized, moment-corrected standardized, and adjusted standardized) is assessed using alpha 0.05 or, optionally
-(by setting the parameter 'adj.alpha' to TRUE),
+(by setting the parameter \code{adj.alpha} to \code{TRUE}),
 using an adjusted alpha calculated using the Sidak's method:\cr
 
 \eqn{alpha.adj = 1-(1 - 0.05)^(1/(nr*nc))}, where\cr
 
 \emph{nr} and \emph{nc} are the number of rows and columns in the table respectively. The adjusted
-alpha is then converted into a critical two-tailed z value. \cr See: Beasley-Schumacker 1995: 86, 89.\cr
+alpha is then converted into a critical two-tailed z value. \cr
+
+See: Beasley-Schumacker 1995: 86, 89.\cr
 
 
 \strong{Cells' relative contribution (in percent) to the chi-square statistic}\cr
@@ -311,16 +379,18 @@ The cells' absolute contribution (in percent) to the chi-square statistic is cal
 \emph{chisq.values} and \emph{n} are the chi-square
 value in each individual cell of the table and the table's grant total, respectively. The
 \emph{average contribution} is calculated as sum of all the absolute contributions divided by the number of cells in
-the table. \cr For both the relative and absolute contributions to the chi-square, see:
-Beasley-Schumacker 1995: 90.\cr
+the table.\cr
+
+For both the relative and absolute contributions to the chi-square, see: Beasley-Schumacker 1995: 90.\cr
 
 
 \strong{Phi corrected}\cr
 To further refine Phi, a corrected version has been introduced. It accounts for the fact that the original coefficient (1)
 might not reach its maximum value of 1 even when there is a perfect association between the variables, and (2) it is not directly
 comparable across tables with different marginals. To calculate Phi-corrected, one first computes Phi-max, which represents the
-maximum possible value of Phi under the given marginal totals. Phi-corrected is equal to Phi/Phi-max. \cr For more details
-see: Cureton 1959; Liu 1980; Davenport et al. 1991; Rash et al. 2011.\cr
+maximum possible value of Phi under the given marginal totals. Phi-corrected is equal to Phi/Phi-max. \cr
+
+For more details see: Cureton 1959; Liu 1980; Davenport et al. 1991; Rash et al. 2011.\cr
 
 
 \strong{95perc confidence interval around Cramer's V}\cr
@@ -336,15 +406,19 @@ The bias-corrected Cramer's V is based on Bergsma 2013: 323–328.\cr
 It addresses some limitations of Cramer's V. When the marginal probabilities are unevenly distributed, V may overstate the
 strength of the association, proving pretty high even when the overall association is weak. W is based on the distance between observed
 and expected frequencies. It uses the squared distance to adjust for the unevenness of the marginal distributions in the table.
-The indication of the magnitude of the effect size is based (with minor changes in terminology) on Kvalseth 2018a.
+The indication of the magnitude of the association is based on Cohen 1988 (see above).
 Unlike Kvalseth 2018a, the calculation of the 95 percent confidence interval is based on a bootstrap approach (employing 10k resampled tables, and the 2.5th and 97.5th
-percentiles of the bootstrap distribution).\cr For more details see: Kvalseth 2018a.\cr
+percentiles of the bootstrap distribution).\cr
+
+For more details see: Kvalseth 2018a.\cr
 
 
 \strong{Corrected Goodman-Kruskal's lambda}\cr
 The corrected Goodman-Kruskal's lambda adeptly addresses skewed or unbalanced marginal probabilities which create problems to the traditional lambda.
 By emphasizing categories with higher probabilities through a process of squaring maximum probabilities and normalizing with marginal probabilities, this refined
-coefficient addresses inherent limitations of lambda. \cr For more details see: Kvalseth 2018b.\cr
+coefficient addresses inherent limitations of lambda.\cr
+
+For more details see: Kvalseth 2018b.\cr
 
 
 \strong{Odds Ratio}\cr
@@ -352,12 +426,13 @@ The odds ratio is calculated for 2x2 tables. In case of zeros along any of the t
 the \emph{Haldane-Anscombe} correction is applied. It consists in adding 0.5 to every cell of the table before calculating the odds ratio.
 For tables of size 2xk (where k >= 2), pairwise odds ratios can be plotted (along with their confidence interval) by
 setting the \code{or.alpha} parameter to \code{TRUE}. The mentioned correction
-is also applied to the calculation of those pairwise odds ratios (for more information on the plot, see further below).
-\cr For the Haldane-Anscombe correction see, for instance, Fleiss-Levin-Paik 2003: 102-103.\cr
+is also applied to the calculation of those pairwise odds ratios (for more information on the plot, see further below).\cr
+
+For the Haldane-Anscombe correction see, for instance, Fleiss-Levin-Paik 2003: 102-103.\cr
 
 
 \strong{Odds Ratio effect size magnitude}\cr
-The magnitude of the effect indicated by the odds ratio is based on the thresholds (and corresponding reciprocal)
+The magnitude of the associaiton indicated by the odds ratio is based on the thresholds (and corresponding reciprocal)
 suggested by Chen et al 2010:\cr
 
  \itemize{
@@ -437,7 +512,7 @@ result <- chisquare(social_class[c(1:2), c(1:2)], B=99)
 
 }
 \references{
-Baddeley et al. 2016. Spatial Point Patterns. Methodology and Applications with R, CRC Press.
+Agresti, A., Franklin, C., & Klingenberg, B. (2022). Statistics: The Art and Science of Learning from Data, (5th ed.). Pearson Education.
 
 Beh E.J., Lombardo R. 2014. Correspondence Analysis: Theory, Practice and New Strategies, Chichester, Wiley.
 
@@ -463,6 +538,8 @@ Fleiss, J. L., Levin, B., & Paik, M. C. 2003. Statistical Methods for Rates and 
 
 Garcia-Perez, MA, and Nunez-Anton, V. 2003. Cellwise Residual Analysis in Two-Way Contingency Tables. Educational and Psychological Measurement, 63(5).
 
+Greenwood, P. E., & Nikulin, M. S. (1996). A guide to chi-squared testing. John Wiley & Sons.
+
 Haberman, S. J. (1973). The Analysis of Residuals in Cross-Classified Tables. In Biometrics (Vol. 29, Issue 1, p. 205).
 
 Kvålseth, T. O. (2018a). An alternative to Cramér’s coefficient of association. In Communications in Statistics - Theory and Methods (Vol. 47, Issue 23, pp. 5662–5674).
@@ -479,11 +556,16 @@ American Psychological Association (APA).
 
 Richardson, J. T. E. (2011). The analysis of 2 × 2 contingency tables-Yet again. In Statistics in Medicine (Vol. 30, Issue 8, pp. 890–890).
 
+Roscoe, J. T., & Byars, J. A. (1971). An Investigation of the Restraints with Respect to Sample Size Commonly Imposed on the Use of the Chi-Square Statistic.
+Journal of the American Statistical Association, 66(336), 755–759.
+
 Sheskin, D. J. 2011. Handbook of Parametric and Nonparametric Statistical Procedures, Fifth Edition (5th ed.). Chapman and Hall/CRC.
 
 Smithson M.J. 2003. Confidence Intervals, Quantitative Applications in the Social Sciences Series, No. 140. Thousand Oaks, CA: Sage.
 
 Upton, G. J. G. (1982). A Comparison of Alternative Tests for the 2 × 2 Comparative Trial. In Journal of the Royal Statistical Society.
 Series A (General) (Vol. 145, Issue 1, p. 86).
+
+Zar, J. H. (2014). Biostatistical analysis (5th ed.). Pearson New International Edition.
 }
 \keyword{chiperm}

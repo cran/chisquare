@@ -4,8 +4,8 @@
 #' @description The function performs the chi-square test (both in its original format and in the N-1 version) and the G-square test of independence
 #' on the input contingency table. It also calculates various measures of categorical association, returns standardized, moment-corrected standardized,
 #' and adjusted standardized residuals (with indication of their significance), and calculates relative and absolute contributions to the chi-square.
-#' The p value associated to the chi-square statistic is also calculated via a Monte Carlo method. The 95 percent confidence interval around the
-#' simulated p value is also calculated. Nicely-formatted output tables are rendered. Optionally, in 2xk tables (where k >= 2), a plot of the odds ratios can be rendered.\cr
+#' The p value associated to the chi-square statistic is also calculated via both a permutation- and a Monte Carlo-based method. The 95 percent confidence interval around those
+#' p values is also calculated. Nicely-formatted output tables are rendered. Optionally, in 2xk tables (where k >= 2), a plot of the odds ratios can be rendered.\cr
 #' Visit this \href{https://drive.google.com/file/d/1WxRUOpKUGcHW8OwMJLS_uy5QmLaCplCa/view?usp=sharing}{LINK} to access the package's vignette.\cr
 #'
 #' @details The function produces the following \strong{measures of categorical associations}:
@@ -26,73 +26,127 @@
 #'   \item Cohen's k (with 95perc confidence interval)
 #' }
 #'
-#' \strong{Indication of the magnitude of the effect size for coefficients of association}\cr
-#' The function provides the effect size for the Phi, Phi corrected, Phi signed, Cadj, Cramer's V, Cramer's V bias-corrected,
+#' \strong{Indication of the magnitude of the association as indicated by the coefficients}\cr
+#' The function provides indication of the mangitude of the association (effect size) for the Phi, Phi corrected, Phi signed, Cadj, Cramer's V, Cramer's V bias-corrected,
 #' Cohen's w, W, and for the Odds Ratio.\cr
 #'
-#' With the exception of the latter two (for which see further down), the effect size for the other measures of association
-#' is based on Cohen 1988. For a useful summary of the approach used, refer to Sheskin 2011, 675 and following pages. \cr
+#' With the exception of the latter (for which see further down), the effect size for the other measures of association
+#' is based on Cohen 1988.\cr
 #'
-#' While Phi, Phi corrected, Phi signed, and w are assessed against the well-known Cohen's classification
-#' scheme (small 0.1, medium 0.3, large 0.5), Cadj and the two versions of V are preliminary turned into Cohen's w before attaching
-#' either the "small effect", or "medium effect", or "large effect" label.\cr
+#' Phi, Phi corrected, Phi signed, and w are assessed against the well-known Cohen's classification
+#' scheme's thresholds (small 0.1, medium 0.3, large 0.5). For input cross-tabs larger than 2x2, the Cadj, V, V bias-corrected, and W coefficients
+#' are assessed against thresholds that depend on the table's df, which (as per Cohen 1988) correspond to the smaller between the rows and columns number,
+#' minus 1. On the basis of the table's df, the three thresholds are calculated as follows: \cr
 #'
-#' For instance, using the in-built 'social_class' 3x4 cross-tab,
-#' Cramer's V is 0.233. Before attaching an effect size label, V is turned into w by multiplying it by the square root of the number of rows or columns,
-#' whichever is smaller, minus 1. Therefore, the value of V that has to be given a label would translate into 0.233*sqrt(3-1)=0.33. The latter,
-#' according to Cohen's guidelines, can be labelled as pointing to a "medium effect". The bias-corrected version of V is 0.21, which
-#' would translate into 0.21*sqrt(3-1)=0.296 which, in turn, can be labelled as indicating a "small effect".\cr
+#' small effect: 0.100 / sqrt(min(nr,nc)-1)\cr
+#' medium effect: 0.300 / sqrt(min(nr,nc)-1)\cr
+#' large effect: 0.500 / sqrt(min(nr,nc)-1)\cr
 #'
-#' It is important to note that, when working with V, the transformation into w involves (as said) multiplying the V value by the square root of the lesser
-#' between the number of rows or columns in the table, minus one. This number essentially represents the dimensionality of the table.\cr
+#' where nr and nc are the number of rows and number of columns respectively, and min(nr,nc)-1 corresponds to the table's df.
+#' Essentially, the thresholds for a small, medium, and large effect are computed by dividing the Cohen's thresholds for a 2x2 table (df=1)
+#' by the square root of the input table's df.\cr
 #'
-#' Consider a V value of 0.35. The way it translates to w, and subsequently its effect size interpretation, can change based on the table's dimensionality:\cr
-#' for a 2x2 table: w=0.35*sqrt(2-1)=0.35, indicating a "medium" effect;\cr
-#' for a 3x3 table: w=0.35*sqrt(2-1)=0.49, still falling under the "medium" effect category;\cr
-#' for a 4x4 table: w=0.35*sqrt(4-1)=0.61, which now is interpreted as a "large" effect.\cr
+#' Consider a V value of (say) 0.35; its effect size interpretation changes based on the table's dimensionality:\cr
 #'
-#' The examples illustrate that the larger the table dimensionality (i.e., more rows or columns), the larger the 'w' value will be for a given V.
-#' This means that for the same V value, the interpreted effect size can shift from "medium" in a smaller table to "large" in a larger table.
-#' It is crucial to be aware of this as it highlights that the same V value can imply different magnitudes of effect depending on the table's dimensionality.\cr
+#' for a 2x2 table, 0.35 corresponds to a "medium" effect;\cr
+#' for a 3x3 table, 0.35 still corresponds to a "medium" effect;\cr
+#' for a 4x4 table, 0.35 corresponds to a "large" effect.\cr
 #'
+#' The examples illustrate that for the same (say) V value, the interpreted effect size can shift from "medium" in a smaller table to "large" in a larger table.
 #' In simpler terms, the threshold for determining a "large" effect, for instance, becomes more accessible to reach as the table's size increases.\cr
 #'
-#' Cadj is turned into w as follows: sqrt(Cadj^2/(1-Cadj^2)).\cr
+#' It is crucial to be aware of this as it highlights that the same coefficient value can imply different magnitudes of effect depending on the table's dimensionality.\cr
 #'
-#' For more details on the entire approach, refer to Sheskin 2011 cited above.
-#'
-#'
-#' \strong{Monte Carlo p-value for the chi-square statistic}\cr
-#' The p-value of the observed chi-square statistic is also calculated on the basis of a Monte Carlo (permutation-based) approach,
-#' using \emph{B} random tables created under the Null Hypothesis of independence. \cr For the rationale of this approach,
-#' see for instance the description in Beh-Lombardo 2014: 62-64. The permutation-based p value is calculated as follows: \cr
-#'
-#' \eqn{(1 + sum (chistat.perm > chisq.stat)) / (1 + B)}, where\cr
-#'
-#' \emph{chistat.perm} is a vector storing the B chi-square statistics generated under the Null Hypothesis, and
-#' \emph{chisq.stat} is the observed chi-square statistic. \cr For the logic of the calculation, see for example
-#' Baddeley et al. 2016: 387.\cr
+#' See: Cohen 1988; Sheskin 2011.
 #'
 #'
-#'  \strong{Confidence interval around the Monte Carlo p-value}\cr
-#' The function calculates the 95 percent Confidence Interval around the Monte Carlo p-value.
-#' The Wald CI quantifies the uncertainty around the Monte Carlo p-value estimate. For a 95 percent CI,
-#' the standard z-value of 1.96 is used.The standard error for the estimated p-value is computed as the square root of
-#' (estimated p-value * (1 - estimated p-value) / number of simulations).
+#'  \strong{Suggestion of a suitable chi-square testing method}\cr
+#' The first rendered table includes a suggestion for the applicable chi-squared test method,
+#' derived from an internal analysis of the input contingency table. The decision logic used is as follows:\cr
+#'
+#' For 2x2 Tables:\cr
+#' - if the grand total is equal to or larger than 5 times the number of cells,
+#'   the traditional Chi-Square test is suggested. Permutation or Monte Carlo
+#'   methods can also be considered.\cr
+#'
+#' - if the grand total is smaller than 5 times the number of cells, the minimum expected count is checked:\cr
+#' (A) if it is equal to or larger than 1, the (N-1)/N adjusted Chi-Square test is
+#'     suggested, with an option for Permutation or Monte Carlo methods.\cr
+#' (B) if it is less than 1, the Permutation or Monte Carlo method is recommended.\cr
+#'
+#' For Larger than 2x2 Tables:\cr
+#' - the logic is similar to that for 2x2 tables, with the same criteria for
+#'   suggesting the traditional Chi-Square test, the (N-1)/N adjusted test,
+#'   or the Permutation or Monte Carlo methods.\cr
+#'
+#' The rationale of a threshold for the applicability of the traditional chi-square test corresponding to
+#' 5 times the number of cells is based on the following.\cr
+#'
+#' Literature indicates that the traditional chi-squared test's validity is not as fragile as once thought,
+#' especially when considering the average expected frequency across all cells in the cross-tab, rather than
+#' the minimum expected value in any single cell. An average expected frequency of at least 5 across all
+#' cells of the input table should be sufficient for maintaining the chi-square test's reliability at the
+#' 0.05 significance level.\cr
+#'
+#' As a consequence, a table's grand total equal to or larger than 5 times the number of cells should ensure the applicability
+#' of the traditional chi-square test (at alpha 0.05).\cr
+#'
+#' See: Roscoe-Byars 1971; Greenwood-Nikulin 1996; Zar 2014.\cr
+#'
+#' For the rationale of the use of the (N-1)/N adjusted version of the chi-square test,
+#' and for the permutation and Monte Carlo method, see below.\cr
+#'
+#'
+#' \strong{Chi-square statistics adjusted using the (N-1)/N adjustment}\cr
+#' The adjustment is done by multiplying the chi-square statistics by (N-1)/N, where N is the table grand total (sample size). The p-value
+#' of the corrected statistic is calculated the regular way (i.e., using the same degrees of freedom as in the traditional test).
+#' The correction seems particularly relevant for tables where N is smaller than 20 and where the expected frequencies are equal
+#' or larger than 1. The corrected chi-square test proves more conservative when the sample size is small.
+#' As N increases, the term (N-1)/N approaches 1, making the adjusted chi-square value virtually equivalent to the unadjusted value.\cr
+#'
+#' See: Upton 1982; Rhoades-Overall1982; Campbel 2007; Richardson 2011. \cr
+#'
+#'
+#' \strong{Permutation-based and Monte Carlo p-value for the chi-square statistic}\cr
+#' The p-value of the observed chi-square statistic is also calculated on the basis of both a permutation-based and a
+#' Monte Carlo approach. In the first case, the dataset is permuted \emph{B} times (1000 by default), whereas in the second method
+#' \emph{B} establishes the number of random tables generated under the null hypothesis of independence (1000 by default).\cr
+#'
+#' As for the permutation method, the function does the following internally:\cr
+#' (1) Converts the input dataset to long format and expands to individual observations; \cr
+#' (2) Calculates the observed chi-squared statistic; \cr
+#' (3) Randomly shuffles (B times) the labels of the levels of one variable, and recalculates chi-squared statistic for each shuffled dataset;
+#' (4) Computes the p-value based on the distribution of permuted statistics (see below).\cr
+#'
+#' For the rationale of the permutation-based approach, see for instance Agresti et al 2022.\cr
+#'
+#' For the rationale of the Monte Carlo approach, see for instance the description in Beh-Lombardo 2014: 62-64.\cr
+#'
+#' Both simulated p-values are calculated as follows: \cr
+#'
+#' \eqn{sum (chistat.simulated >= chisq.stat) / B}, where\cr
+#'
+#' \emph{chistat.simulated} is a vector storing the B chi-squared statistics generated under the Null Hypothesis, and\cr
+#' \emph{chisq.stat} is the observed chi-squared statistic.\cr
+#'
+#' Both distributions can be optionally plotted setting the \code{graph} parameter to \code{TRUE}.\cr
+#'
+#'
+#'  \strong{Confidence interval around the permutation-based and Monte Carlo p-value}\cr
+#' The function calculates the 95 percent Confidence Interval around the simulated p-values.
+#' The Wald CI quantifies the uncertainty around the simulated p-value estimate. For a 95 percent CI,
+#' the standard z-value of 1.96 is used. The standard error for the estimated p-value is computed as the square root of
+#' (estimated p-value * (1 - estimated p-value) / number of simulations-1).
 #'
 #' The lower and upper bounds of the CI are then calculated as follows:\cr
 #' Lower Confidence Interval = estimated p-value - (z-value * standard error)\cr
 #' Upper Confidence Interval = estimated p-value + (z-value * standard error)\cr
 #'
-#' Finally, the lower and upper CIs are clipped to lie within 0 and 1.
+#' Finally, the lower and upper CIs are clipped to lie within 0 and 1.\cr
 #'
+#' The implemented procedure aligns with the one described at this link:
+#' https://blogs.sas.com/content/iml/2015/10/28/simulation-exact-tables.html\cr
 #'
-#' \strong{Chi-square statistics adjusted using the (N-1)/N correction}\cr
-#' The correction is done by multiplying the chi-square statistics by (N-1)/N, where N is the table grand total (sample size). The p-value
-#' of the corrected statistic is calculated the regular way. The correction seems particularly relevant for tables where N is smaller than
-#' 20 and where the expected frequencies are equal or larger than 1. The corrected chi-square test proves more conservative when the sample size
-#' is small. As N increases, the term (N-1)/N approaches 1, making the adjusted chi-square value virtually equivalent to the unadjusted value.\cr
-#' See: Upton 1982; Rhoades-Overall1982; Campbel 2007; Richardson 2011. \cr
 #'
 #'
 #' \strong{Moment-corrected standardized residuals}\cr
@@ -101,8 +155,9 @@
 #' \eqn{stand.res / (sqrt((nr-1)*(nc-1)/(nr*nc)))}, where\cr
 #'
 #' \emph{stand.res} is each cell's standardized residual, \emph{nr} and
-#' \emph{nc} are the number of rows and columns respectively.\cr See
-#' Garcia-Perez-Nunez-Anton 2003: 827.\cr
+#' \emph{nc} are the number of rows and columns respectively.\cr
+#'
+#' See Garcia-Perez-Nunez-Anton 2003: 827.\cr
 #'
 #'
 #' \strong{Adjusted standardized residuals}\cr
@@ -115,18 +170,22 @@
 #' \emph{n} is the table grand total. The \emph{adjusted standardized residuals} should be used in place of
 #' the standardised residuals since the latter are not truly standarised because they have a nonunit variance. The
 #' standardised residuals therefore underestimate the divergence between the observed and the expected counts. The adjusted
-#' standardized residuals (and the moment-corrected ones) correct that deficiency.\cr For more info see: Haberman 1973.\cr
+#' standardized residuals (and the moment-corrected ones) correct that deficiency.\cr
+#'
+#' For more info see: Haberman 1973.\cr
 #'
 #'
 #' \strong{Significance of the residuals}\cr
 #' The significance of the residuals (standardized, moment-corrected standardized, and adjusted standardized) is assessed using alpha 0.05 or, optionally
-#' (by setting the parameter 'adj.alpha' to TRUE),
+#' (by setting the parameter \code{adj.alpha} to \code{TRUE}),
 #' using an adjusted alpha calculated using the Sidak's method:\cr
 #'
 #' \eqn{alpha.adj = 1-(1 - 0.05)^(1/(nr*nc))}, where\cr
 #'
 #' \emph{nr} and \emph{nc} are the number of rows and columns in the table respectively. The adjusted
-#' alpha is then converted into a critical two-tailed z value. \cr See: Beasley-Schumacker 1995: 86, 89.\cr
+#' alpha is then converted into a critical two-tailed z value. \cr
+#'
+#' See: Beasley-Schumacker 1995: 86, 89.\cr
 #'
 #'
 #' \strong{Cells' relative contribution (in percent) to the chi-square statistic}\cr
@@ -148,16 +207,18 @@
 #' \emph{chisq.values} and \emph{n} are the chi-square
 #' value in each individual cell of the table and the table's grant total, respectively. The
 #' \emph{average contribution} is calculated as sum of all the absolute contributions divided by the number of cells in
-#' the table. \cr For both the relative and absolute contributions to the chi-square, see:
-#' Beasley-Schumacker 1995: 90.\cr
+#' the table.\cr
+#'
+#' For both the relative and absolute contributions to the chi-square, see: Beasley-Schumacker 1995: 90.\cr
 #'
 #'
 #' \strong{Phi corrected}\cr
 #' To further refine Phi, a corrected version has been introduced. It accounts for the fact that the original coefficient (1)
 #' might not reach its maximum value of 1 even when there is a perfect association between the variables, and (2) it is not directly
 #' comparable across tables with different marginals. To calculate Phi-corrected, one first computes Phi-max, which represents the
-#' maximum possible value of Phi under the given marginal totals. Phi-corrected is equal to Phi/Phi-max. \cr For more details
-#' see: Cureton 1959; Liu 1980; Davenport et al. 1991; Rash et al. 2011.\cr
+#' maximum possible value of Phi under the given marginal totals. Phi-corrected is equal to Phi/Phi-max. \cr
+#'
+#' For more details see: Cureton 1959; Liu 1980; Davenport et al. 1991; Rash et al. 2011.\cr
 #'
 #'
 #' \strong{95perc confidence interval around Cramer's V}\cr
@@ -173,15 +234,19 @@
 #' It addresses some limitations of Cramer's V. When the marginal probabilities are unevenly distributed, V may overstate the
 #' strength of the association, proving pretty high even when the overall association is weak. W is based on the distance between observed
 #' and expected frequencies. It uses the squared distance to adjust for the unevenness of the marginal distributions in the table.
-#' The indication of the magnitude of the effect size is based (with minor changes in terminology) on Kvalseth 2018a.
+#' The indication of the magnitude of the association is based on Cohen 1988 (see above).
 #' Unlike Kvalseth 2018a, the calculation of the 95 percent confidence interval is based on a bootstrap approach (employing 10k resampled tables, and the 2.5th and 97.5th
-#' percentiles of the bootstrap distribution).\cr For more details see: Kvalseth 2018a.\cr
+#' percentiles of the bootstrap distribution).\cr
+#'
+#' For more details see: Kvalseth 2018a.\cr
 #'
 #'
 #' \strong{Corrected Goodman-Kruskal's lambda}\cr
 #' The corrected Goodman-Kruskal's lambda adeptly addresses skewed or unbalanced marginal probabilities which create problems to the traditional lambda.
 #' By emphasizing categories with higher probabilities through a process of squaring maximum probabilities and normalizing with marginal probabilities, this refined
-#' coefficient addresses inherent limitations of lambda. \cr For more details see: Kvalseth 2018b.\cr
+#' coefficient addresses inherent limitations of lambda.\cr
+#'
+#' For more details see: Kvalseth 2018b.\cr
 #'
 #'
 #' \strong{Odds Ratio}\cr
@@ -189,12 +254,13 @@
 #' the \emph{Haldane-Anscombe} correction is applied. It consists in adding 0.5 to every cell of the table before calculating the odds ratio.
 #' For tables of size 2xk (where k >= 2), pairwise odds ratios can be plotted (along with their confidence interval) by
 #' setting the \code{or.alpha} parameter to \code{TRUE}. The mentioned correction
-#' is also applied to the calculation of those pairwise odds ratios (for more information on the plot, see further below).
-#' \cr For the Haldane-Anscombe correction see, for instance, Fleiss-Levin-Paik 2003: 102-103.\cr
+#' is also applied to the calculation of those pairwise odds ratios (for more information on the plot, see further below).\cr
+#'
+#' For the Haldane-Anscombe correction see, for instance, Fleiss-Levin-Paik 2003: 102-103.\cr
 #'
 #'
 #' \strong{Odds Ratio effect size magnitude}\cr
-#' The magnitude of the effect indicated by the odds ratio is based on the thresholds (and corresponding reciprocal)
+#' The magnitude of the associaiton indicated by the odds ratio is based on the thresholds (and corresponding reciprocal)
 #' suggested by Chen et al 2010:\cr
 #'
 #'  \itemize{
@@ -264,7 +330,7 @@
 #'
 #'
 #' @param data Dataframe containing the input contingency table.
-#' @param B  Number of simulated tables to be used to calculate the Monte Carlo-based p value (999 by default).
+#' @param B  Number of simulated tables to be used to calculate the permutation- and the Monte Carlo-based p value (1000 by default).
 #' @param plot.or Takes TRUE or FALSE (default) if the user wants a plot of the odds ratios to be rendered (only for 2xk tables, where k >= 2).
 #' @param reference.level The index of the column reference level for odds ratio calculations (default: 1).
 #' The user must select the column level to serve as the reference level (only for 2xk tables, where k >= 2).
@@ -277,8 +343,10 @@
 #' input dataset is a dataframe storing two columns that list the levels of the two categorical variables,
 #' \emph{long} will preliminarily cross-tabulate the levels of the categorical variable in the 1st column against
 #' the levels of the variable stored in the 2nd column.
-#' @param graph Takes TRUE or FALSE (default) if the user wants or does not want to chart the distribution of the permuted
-#'  chi-square statistic accross the number of randomized tables set by the B parameter.
+#' @param graph Takes TRUE or FALSE (default) if the user wants or does not want to plot the permutation and Monte Carlo
+#' distribution of the chi-square statistic accross the number of simulated tables set by the B parameter.
+#' @param oneplot Takes TRUE (default) or FALSE if the user wants or does not want to render of the permutation and Monte Carlo
+#' distribution in the same plot.
 #' @param tfs Numerical value to set the size of the font used in the main body of the various output tables (14 by default).
 #'
 #'
@@ -309,12 +377,17 @@
 #'   \item \strong{chi.sq.related.results}:
 #'     \itemize{
 #'       \item \emph{exp.freq}: table of expected frequencies.
+#'       \item \emph{smallest.exp.freq}: smallest expected frequency.
+#'       \item \emph{avrg.exp.freq}: average expected frequency.
 #'       \item \emph{chisq.values}: cells' chi-square value.
 #'       \item \emph{chisq.relat.contrib}: cells' relative contribution (in percent) to the chi-square statistic.
 #'       \item \emph{chisq.abs.contrib}: cells' absolute contribution (in percent) to the chi-square statistic.
 #'       \item \emph{chisq.statistic}: observed chi-square value.
 #'       \item \emph{chisq.p.value}: p value of the chi-square statistic.
-#'       \item \emph{chisq.p.value.MC}: Monte Carlo p value, based on B permuted tables.
+#'       \item \emph{chisq.p.value.perm}: permutation-based p value, based on B permuted tables.
+#'       \item \emph{chisq.p.value.perm CI lower boundary}: lower boundary of the 95 percent CI around the permutation-based p value.
+#'       \item \emph{chisq.p.value.perm CI upper boundary}: upper boundary of the 95 percent CI around the permutation-based p value.
+#'       \item \emph{chisq.p.value.MC}: Monte Carlo p value, based on B random tables.
 #'       \item \emph{chisq.p.value.MC CI lower boundary}: lower boundary of the 95 percent CI around the Monte Carlo p value.
 #'       \item \emph{chisq.p.value.MC CI upper boundary}: upper boundary of the 95 percent CI around the Monte Carlo p value.
 #'       \item \emph{chisq.adj}: chi-square statistic adjusted using the (N-1)/N correction.
@@ -401,7 +474,7 @@
 #' @keywords chiperm
 #'
 #'
-#' @references Baddeley et al. 2016. Spatial Point Patterns. Methodology and Applications with R, CRC Press.
+#' @references Agresti, A., Franklin, C., & Klingenberg, B. (2022). Statistics: The Art and Science of Learning from Data, (5th ed.). Pearson Education.
 #'
 #' @references Beh E.J., Lombardo R. 2014. Correspondence Analysis: Theory, Practice and New Strategies, Chichester, Wiley.
 #'
@@ -427,6 +500,8 @@
 #'
 #' @references Garcia-Perez, MA, and Nunez-Anton, V. 2003. Cellwise Residual Analysis in Two-Way Contingency Tables. Educational and Psychological Measurement, 63(5).
 #'
+#' @references Greenwood, P. E., & Nikulin, M. S. (1996). A guide to chi-squared testing. John Wiley & Sons.
+#'
 #' @references Haberman, S. J. (1973). The Analysis of Residuals in Cross-Classified Tables. In Biometrics (Vol. 29, Issue 1, p. 205).
 #'
 #' @references Kvålseth, T. O. (2018a). An alternative to Cramér’s coefficient of association. In Communications in Statistics - Theory and Methods (Vol. 47, Issue 23, pp. 5662–5674).
@@ -443,6 +518,9 @@
 #'
 #' @references Richardson, J. T. E. (2011). The analysis of 2 × 2 contingency tables-Yet again. In Statistics in Medicine (Vol. 30, Issue 8, pp. 890–890).
 #'
+#' @references Roscoe, J. T., & Byars, J. A. (1971). An Investigation of the Restraints with Respect to Sample Size Commonly Imposed on the Use of the Chi-Square Statistic.
+#' Journal of the American Statistical Association, 66(336), 755–759.
+#'
 #' @references Sheskin, D. J. 2011. Handbook of Parametric and Nonparametric Statistical Procedures, Fifth Edition (5th ed.). Chapman and Hall/CRC.
 #'
 #' @references Smithson M.J. 2003. Confidence Intervals, Quantitative Applications in the Social Sciences Series, No. 140. Thousand Oaks, CA: Sage.
@@ -450,12 +528,13 @@
 #' @references Upton, G. J. G. (1982). A Comparison of Alternative Tests for the 2 × 2 Comparative Trial. In Journal of the Royal Statistical Society.
 #' Series A (General) (Vol. 145, Issue 1, p. 86).
 #'
+#' @references Zar, J. H. (2014). Biostatistical analysis (5th ed.). Pearson New International Edition.
 #'
 #' @export
 #'
 #' @importFrom gt gt cols_align tab_header md tab_source_note tab_options pct
 #' @importFrom stats pchisq addmargins r2dtable pnorm quantile qnorm rmultinom
-#' @importFrom graphics abline points hist rug
+#' @importFrom graphics abline points hist rug layout par
 #'
 #'
 #' @examples
@@ -468,7 +547,7 @@
 #'
 #'
 #'
-chisquare <- function(data, B=999, plot.or= FALSE, reference.level = 1, row.level = 1, or.alpha = 0.05, adj.alpha=FALSE, format="short", graph=FALSE, tfs=14){
+chisquare <- function(data, B = 1000, plot.or= FALSE, reference.level = 1, row.level = 1, or.alpha = 0.05, adj.alpha=FALSE, format="short", graph=FALSE, oneplot=TRUE, tfs=14){
   VALUE <- NULL
   df <- data
 
@@ -493,6 +572,9 @@ chisquare <- function(data, B=999, plot.or= FALSE, reference.level = 1, row.leve
   #degrees of freedom
   degrees.of.f <- (nr-1)*(nc-1)
 
+  #average expected count
+  avrg.expt.count <- round(n/(nr*nc),3)
+
   #if alpha.adj is TRUE, adjust the value of alpha using the Sidak's method,
   #and calculate the two-tailed critical value to be used as threshold for the
   #significance of the standardized and adjusted standardized residuals
@@ -515,7 +597,7 @@ chisquare <- function(data, B=999, plot.or= FALSE, reference.level = 1, row.leve
   }
 
   #create a function to calculate the chi-sq statistic, to be also
-  #used later on to calculate the permuted chi-sq statistic
+  #used later on to calculate the simulated chi-sq statistic
   calc <- function(x){
     #expected frequencies
     exp.freq <- round(outer(rowSums(x), colSums(x), "*")/n, 3)
@@ -539,7 +621,7 @@ chisquare <- function(data, B=999, plot.or= FALSE, reference.level = 1, row.leve
   exp.freq <- round(calc(df)$exp.freq,3)
   chisq.adj <- round(chisq.stat * ((n-1)/n), 3)
 
-  #p values
+  #p values for the chi.sq and chi-sq adjusted statistics
   p <- as.numeric(format(pchisq(q=chisq.stat, df=degrees.of.f, lower.tail=FALSE), scientific = T))
   p.chisq.adj <- as.numeric(format(pchisq(q=chisq.adj, df=degrees.of.f, lower.tail=FALSE), scientific = T))
 
@@ -553,20 +635,20 @@ chisquare <- function(data, B=999, plot.or= FALSE, reference.level = 1, row.leve
                                          ifelse(p.chisq.adj < 0.05, "< 0.05",
                                                 round(p.chisq.adj, 3))))
 
-  #calculate the chi-sq statistic B times, using the above-defined 'calc' function
-  extract <- function(x)  calc(x)$chisq.stat
-  chistat.perm <- sapply(r2dtable(B, sr, sc), extract)
 
-  #calculate the p value of the observed chi-sq on the basis of the
-  #B permuted chi-sq statistics
-  p.uppertail <- (1 + sum (chistat.perm > chisq.stat)) / (1 + B)
+  ##calculate the chi-sq statistic B times, using the above-defined 'calc' function##
+  extract <- function(x)  calc(x)$chisq.stat
+  chistat.mc <- sapply(r2dtable(B, sr, sc), extract)
+
+  #calculate the p value of the observed chi-sq on the basis of the B Monte Carlo chi-sq statistics
+  p.uppertail <- sum (chistat.mc >= chisq.stat) / B
 
   #p.uppertail.to.report <- ifelse(p.uppertail < 0.001, "< 0.001",
   #ifelse(p.uppertail < 0.01, "< 0.01",
   #ifelse(p.uppertail < 0.05, "< 0.05",
   #round(p.uppertail, 3))))
 
-  # Calculation of the confidence interval around the permuted p-value
+  # Calculation of the confidence interval around the Monte Carlo p-value
   SE <- sqrt(p.uppertail * (1 - p.uppertail) / (B - 1))
 
   # set the apha value for a 95% CI
@@ -583,7 +665,54 @@ chisquare <- function(data, B=999, plot.or= FALSE, reference.level = 1, row.leve
   lower_ci <- max(lower_ci, 0)
   upper_ci <- min(upper_ci, 1)
 
-  #G-squared
+
+  ##carry out the permutation-based chi-sq test##
+
+  # Step 1: Convert input table to long format
+  long.format <- as.data.frame(as.table(as.matrix(df)))
+  names(long.format) <- c("Variable1", "Variable2", "Count")
+
+  # Step 2: Expand to individual observations
+  expanded.data <- long.format[rep(seq_len(nrow(long.format)), long.format$Count), 1:2]
+
+  # Calculate the original chi-squared statistic, using the above-defined 'calc()' function
+  original.chi.squared <- calc(df)$chisq.stat
+
+  # Store permuted chi-squared values
+  permuted.chi.squared <- numeric(B)
+
+  for (i in 1:B) {
+    # Shuffle the labels of one of the variables
+    shuffled.data <- expanded.data
+    shuffled.data$Variable2 <- sample(shuffled.data$Variable2)
+
+    # Re-cross-tabulate and compute chi-squared
+    shuffled.table <- table(shuffled.data)
+    permuted.chi.squared[i] <- calc(shuffled.table)$chisq.stat
+  }
+
+  # Calculate the p-value
+  p.value.permut <- sum(permuted.chi.squared >= original.chi.squared) / B
+
+  # Calculation of the confidence interval around the permuted p-value
+  SE.perm <- sqrt(p.value.permut * (1 - p.value.permut) / (B - 1))
+
+  # set the apha value for a 95% CI
+  wald.aplha.perm <- 0.05
+
+  # Z-value for the given alpha level
+  z_value.perm <- qnorm(1 - wald.aplha / 2)
+
+  # Confidence interval calculation
+  lower_ci.perm <- p.value.permut - z_value.perm * SE.perm
+  upper_ci.perm <- p.value.permut + z_value.perm * SE.perm
+
+  # Ensure CI is within [0, 1]
+  lower_ci.perm <- max(lower_ci.perm, 0)
+  upper_ci <- min(upper_ci.perm, 1)
+
+
+  ##G-squared##
   #if any of the cells in the input table is equal to 0,
   #replace the 0s with a small non-zero value because otherwise
   #the log of 0 would be undefined
@@ -599,12 +728,12 @@ chisquare <- function(data, B=999, plot.or= FALSE, reference.level = 1, row.leve
                                         ifelse(p.Gsquared < 0.05, "< 0.05",
                                                round(p.Gsquared,3))))
 
-  # To play safe, assign the input dataset to the object 'df' again,
+  ## To play safe, assign the input dataset to the object 'df' again,
   # because of the preceding addition of 0.001 in case of 0s
   df <- data
 
 
-  ## Define a function to calculate different versions of Phi##
+  ## Define a function to calculate different versions of Phi ##
   calculate_phi <- function(df) {
     # extract cell counts from the table
     a <- as.numeric(df[1,1])
@@ -686,36 +815,30 @@ chisquare <- function(data, B=999, plot.or= FALSE, reference.level = 1, row.leve
   }
 
 
+  ##Define Cohen's thresholds to be used for C, V, Vbc, and W, on the basis of the table's df##
+  Cohen_small <- 0.100 / sqrt(min(nr,nc)-1)
+  Cohen_medium <- 0.300 / sqrt(min(nr,nc)-1)
+  Cohen_large <- 0.500 / sqrt(min(nr,nc)-1)
+
+  # Define breakpoints for effect sizes
+  breakpoints_Cohen <- c(-Inf, Cohen_small, Cohen_medium, Cohen_large, Inf)
+  labels_Cohen <- c("(negligible effect)", "(small effect)", "(medium effect)", "(large effect)")
+
+
   ##adjusted contingency coeffcient##
   C <- sqrt(chisq.stat / (n + chisq.stat))
   Cmax <- sqrt((min(nr,nc)-1) / min(nr,nc))
   Cadj <- round(C / Cmax,3)
 
-  #effect size for Cadj
-  #turn Cadj into Cohen's w
-  Cadjtow <- round(sqrt(Cadj^2/(1-Cadj^2)),3)
-
-  # Define breakpoints for effect sizes
-  breakpoints <- c(-Inf, 0.10, 0.30, 0.50, Inf)
-  labels <- c("(negligible effect)", "(small effect)", "(medium effect)", "(large effect)")
-
   # Use the cut() function to determine the effect size
-  Cadj.effect.size <- cut(Cadjtow, breaks = breakpoints, labels = labels, right = FALSE)
+  Cadj.effect.size <- cut(Cadj, breaks = breakpoints_Cohen, labels = labels_Cohen, right = FALSE)
 
 
   ##Cramer's V##
   V <- round(sqrt(chisq.stat / (n * min(nr-1, nc-1))), 3)
 
-  #effect size for Cramer's V
-  #turn V into Cohen's w
-  Vtow <- round(V * sqrt(min(nr, nc)-1),3)
-
-  # Define breakpoints for effect sizes
-  breakpoints <- c(-Inf, 0.10, 0.30, 0.50, Inf)
-  labels <- c("(negligible effect)", "(small effect)", "(medium effect)", "(large effect)")
-
   # Use the cut() function to determine the effect size
-  V.effect.size <- cut(Vtow, breaks = breakpoints, labels = labels, right = FALSE)
+  V.effect.size <- cut(V, breaks = breakpoints_Cohen, labels = labels_Cohen, right = FALSE)
 
   #95percent CI around Cramer's V
   #fuction to calculate Delta Lower (after Smithson)
@@ -776,16 +899,8 @@ chisquare <- function(data, B=999, plot.or= FALSE, reference.level = 1, row.leve
   r.new  <-  nr-((nr-1)^2 / (n-1))
   V.bc <- round(sqrt(phi.new / min(k.new-1, r.new-1)), 3)
 
-  #effect size for bias-corrected Cramer's V
-  #turn bias-corrected Cramer's V into Cohen's w
-  Vbctow <- round(V.bc * sqrt(min(nr, nc)-1),3)
-
-  # Define breakpoints for effect sizes
-  breakpoints <- c(-Inf, 0.10, 0.30, 0.50, Inf)
-  labels <- c("(negligible effect)", "(small effect)", "(medium effect)", "(large effect)")
-
   # Use the cut() function to determine the effect size
-  Vbc.effect.size <- cut(Vbctow, breaks = breakpoints, labels = labels, right = FALSE)
+  Vbc.effect.size <- cut(V.bc, breaks = breakpoints_Cohen, labels = labels_Cohen, right = FALSE)
 
 
   ## Define a function to calculate the W coefficient ##
@@ -832,12 +947,8 @@ chisquare <- function(data, B=999, plot.or= FALSE, reference.level = 1, row.leve
   # create a vector to store the results to be later reported in the output table
   report.of.W <- paste0(W, " (95% CI ", W.ci.lower,"-", W.ci.upper, ")")
 
-  # Define breakpoints for effect sizes
-  breakpoints_W <- c(-Inf, 0.20, 0.40, 0.60, 0.80, Inf)
-  labels_W <- c("(very small effect)", "(small effect)", "(medium effect)", "(large effect)", "(very large effect)")
-
   # Use the cut() function to determine the effect size for W
-  W.effect.size <- cut(W, breaks = breakpoints_W, labels = labels_W, right = TRUE)
+  W.effect.size <- cut(W, breaks = breakpoints_Cohen, labels = labels_Cohen, right = TRUE)
 
 
   ##Cohen's w##
@@ -860,7 +971,7 @@ chisquare <- function(data, B=999, plot.or= FALSE, reference.level = 1, row.leve
   E2 <- sum(sr - apply(df, 1, max))
   lambda.col.dep <- round((E1-E2)/E1,3)
 
-  #Goodman-Kruskal's lambda symmetric
+  ##Goodman-Kruskal's lambda symmetric##
   max.col.wise <- apply(df, 2, max)
   max.row.wise <- apply(df, 1, max)
   max.row.tot <- max(sr)
@@ -1065,26 +1176,58 @@ chisquare <- function(data, B=999, plot.or= FALSE, reference.level = 1, row.leve
   average.abs.contr <- sum(absolute.contrib) / (nr*nc)
 
 
-  ##plot of the permuted distribution of the chi-square statistic##
+  ##plot of the permutation and Monte Carlo distribution of the chi-square statistic##
   if (graph==TRUE) {
-    graphics::hist(chistat.perm,
-                   main="Permuted Distribution of the Chi-square Statistic",
-                   sub=paste0("\nBalck dot: observed chi-square statistic (", round(chisq.stat, 3), ")",
-                              "\nDashed line: 95th percentile of the permuted chi-square statistic distribution (", round(quantile(chistat.perm, c(0.95)),3),
+
+    #conditionally set the layout in just one visualization
+    if(oneplot==TRUE){
+      m <- rbind(c(1,2))
+      layout(m)
+    }
+
+    graphics::hist(permuted.chi.squared,
+                   main="Permutation Chi-Squared Statistic Distribution",
+                   sub=paste0("\nBalck dot: observed chi-squared statistic (", round(chisq.stat, 3), ")",
+                              "\nDashed line: 95th percentile of the permutation chi-squared statistic distribution (", round(quantile(permuted.chi.squared, c(0.95)),3),
+                              ")", "\np-value: ", round(p.value.permut,3), " (95% CI: ", round(lower_ci.perm,3), "-", round(upper_ci.perm,3), ";", " n. of simulated tables: ", B,")"),
+                   xlab = "",
+                   cex.main=0.80,
+                   cex.sub=0.60)
+    graphics::rug(chistat.mc, col = "#0000FF")
+    graphics::points(x = chisq.stat, y=0, pch=20, col="black")
+    graphics::abline(v = round(stats::quantile(chistat.mc, c(0.95)), 5), lty = 2, col = "blue")
+
+
+    graphics::hist(chistat.mc,
+                   main="Monte Carlo Chi-Squared Statistic Distribution",
+                   sub=paste0("\nBalck dot: observed chi-squared statistic (", round(chisq.stat, 3), ")",
+                              "\nDashed line: 95th percentile of the Monte Carlo chi-squared statistic distribution (", round(quantile(chistat.mc, c(0.95)),3),
                               ")", "\np-value: ", round(p.uppertail,3), " (95% CI: ", round(lower_ci,3), "-", round(upper_ci,3), ";", " n. of simulated tables: ", B,")"),
                    xlab = "",
                    cex.main=0.80,
                    cex.sub=0.60)
-    graphics::rug(chistat.perm, col = "#0000FF")
+    graphics::rug(chistat.mc, col = "#0000FF")
     graphics::points(x = chisq.stat, y=0, pch=20, col="black")
-    graphics::abline(v = round(stats::quantile(chistat.perm, c(0.95)), 5), lty = 2, col = "blue")
+    graphics::abline(v = round(stats::quantile(chistat.mc, c(0.95)), 5), lty = 2, col = "blue")
+
+    #restore the original graphical device's settings if previously modified
+    if(oneplot==TRUE){
+      par(mfrow = c(1,1))
+    }
   }
 
+  ##put the internal 'suggest_chi_squared_method()' function to work##
+  #and assign the output character vector to the decision_method object to be used
+  #later on in the annotation of the first rendered table
+  decision_method <- suggest_chi_squared_method(df)
 
   ##define a vector for the labels of the statistics to be returned##
-  statistics <- c("Chi-square",
+  statistics <- c("Smallest expected count",
+                  "Average expected count",
+                  "Chi-square",
+                  "Chi-square permutation p-value",
                   "Chi-square Monte Carlo p-value",
-                  "Chi-square adjusted",
+                  "Chi-square (N-1)/N adjusted",
                   "G-square",
                   paste("Phi ", phi_effect_size),
                   paste("Phi corrected ", phi_corr_effect_size),
@@ -1109,7 +1252,10 @@ chisquare <- function(data, B=999, plot.or= FALSE, reference.level = 1, row.leve
 
 
   ##define a vector for the statistics to be returned##
-  values.to.report <-c(paste0(chisq.stat, " (df: ", degrees.of.f, "; p: ", p.to.report, ")"),
+  values.to.report <-c(round(min(exp.freq), 3),
+                       avrg.expt.count,
+                       paste0(chisq.stat, " (df: ", degrees.of.f, "; p: ", p.to.report, ")"),
+                       paste0(round(p.value.permut,3), "(95% CI ", round(lower_ci.perm,3), "-", round(upper_ci.perm,3), ")"),
                        paste0(round(p.uppertail,3), "(95% CI ", round(lower_ci,3), "-", round(upper_ci,3), ")"),
                        paste0(chisq.adj, " (p: ", p.chisq.adj.to.report, ")"),
                        paste0(Gsquared, " (p: ", p.Gsquared.to.report, ")"),
@@ -1161,17 +1307,19 @@ chisquare <- function(data, B=999, plot.or= FALSE, reference.level = 1, row.leve
   input.table.out <- gt::tab_source_note(input.table.out,
                                          md(paste0("*Chi-square: ", chisq.stat,
                                                    " (df: ", degrees.of.f, "; p: ", p.to.report,")
+                                                   <br> Chi-square permutation p-value: ", round(p.value.permut,3), " (95% CI: ", round(lower_ci.perm,3), "-",round(upper_ci.perm,3), ")
                                                    <br> Chi-square Monte Carlo p-value: ", round(p.uppertail,3), " (95% CI: ", round(lower_ci,3), "-",round(upper_ci,3), ")
-                                                   <br> Chi-square adj: ", chisq.adj, " (p: ", p.chisq.adj.to.report, ")
+                                                   <br> Chi-square (N-1)/N adj: ", chisq.adj, " (p: ", p.chisq.adj.to.report, ")
                                                    <br> G-square: ", Gsquared," (p: ", p.Gsquared.to.report, ")
-                                                   <br> Cramer's V: ", report.of.V,
+                                                   <br><br> Cramer's V: ", report.of.V,
                                                    "<br> W coefficient: ", report.of.W,
                                                    "<br> Goodman-Kruskal's lambda corrected (symmetric): ", lambda.corrected.symm,
                                                    "<br> Goodman-Kruskal's gamma: ", gamma.coeff,
-                                                   "<br> Number of cells with a significant standardized residual: ", sum(abs(stand.res) > z.crit.two.tailed),
+                                                   "<br><br> Number of cells with a significant standardized residual: ", sum(abs(stand.res) > z.crit.two.tailed),
                                                    "<br> Number of cells with a significant moment-corrected standardized residual: ", sum(abs(mom.corr.stand.res) > z.crit.two.tailed),
                                                    "<br> Number of cells with a significant adjusted standardized residual: ", sum(abs(adj.stand.res) > z.crit.two.tailed),
-                                                   "<br> Significance of the residuals set at alpha ", round(alpha.adj,3), " (two-tailed z critical: ", round(z.crit.two.tailed,3), ")*")))
+                                                   "<br> Significance of the residuals set at alpha ", round(alpha.adj,3), " (two-tailed z critical: ", round(z.crit.two.tailed,3), ")
+                                                   <br><br>", decision_method, ".*")))
   input.table.out <- gt::tab_options(input.table.out, source_notes.font.size=10, table.font.size=tfs, table.width = gt::pct(100))
 
 
@@ -1325,7 +1473,7 @@ chisquare <- function(data, B=999, plot.or= FALSE, reference.level = 1, row.leve
                                VALUE = gt::md("**VALUE**"),)
 
   report.out <- gt::tab_source_note(report.out,
-                                    md("Thresholds for the strength of categorical association: <br>
+                                    md("Alternative thresholds for the strength of categorical association: <br>
                                            *Weak* association 0.00-0.10; *Moderate* association 0.11-0.30; *Strong* association 0.31-1.00
                                            <br> <br> after Healey J.F. 2013, *The Essentials of Statistics. A Tool for Social Research*, 3rd ed., Belmont: Wadsworth"))
 
@@ -1351,11 +1499,16 @@ chisquare <- function(data, B=999, plot.or= FALSE, reference.level = 1, row.leve
     ),
     chi.sq.related.results = list(
       "exp.freq"=exp.freq,
+      "smallest.exp.freq"=round(min(exp.freq),3),
+      "avrg.exp.freq"=avrg.expt.count,
       "chisq.values"=chisq.values,
       "chisq.relat.contrib"=relative.contrib,
       "chisq.abs.contrib"=absolute.contrib,
       "chisq.statistic"=chisq.stat,
       "chisq.p.value"=p,
+      "chisq.p.value.perm"=p.value.permut,
+      "chisq.p.value.perm CI lower boundary"=lower_ci.perm,
+      "chisq.p.value.perm CI upper boundary"=upper_ci.perm,
       "chisq.p.value.MC"=p.uppertail,
       "chisq.p.value.MC CI lower boundary"=lower_ci,
       "chisq.p.value.MC CI upper boundary"=upper_ci,
@@ -1408,10 +1561,11 @@ chisquare <- function(data, B=999, plot.or= FALSE, reference.level = 1, row.leve
     )
   )
 
+
+  # conditionally run the function to visualise the odds ratios
   if (plot.or==TRUE) {
     visualize_odds_ratios(data, reference.level = reference.level, row.level = row.level , or.alpha = or.alpha)
   }
 
   return(results)
 }
-
