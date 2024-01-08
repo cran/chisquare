@@ -33,10 +33,10 @@ suggest_chi_squared_method <- function(cross_tab) {
   if (cross_tab_size == "2x2") {
     explanation <- paste0(explanation, "Since the table is 2x2, ")
     if (grand_total >= 5 * num_cells) {
-      explanation <- paste0(explanation, "and the grand total (", grand_total,") is equal to or larger than 5 times the number of cells (", 5 * num_cells, "), use the traditional Chi-squared test. Permutation or Monte Carlo method can also be considered")
+      explanation <- paste0(explanation, "and the grand total (", grand_total,") is equal to or larger than 5 times the number of cells (", 5 * num_cells, "), use the traditional Chi-Square test. Permutation or Monte Carlo method can also be considered")
     } else {
       if (min_expected >= 1) {
-        explanation <- paste0(explanation, "the grand total (", grand_total,") is smaller than 5 times the number of cells (", 5 * num_cells, "), and the minimum expected count (", min_expected, ") is equal to or larger than 1, use the (N-1)/N adjusted Chi-squared test. Permutation or Monte Carlo method can also be considered")
+        explanation <- paste0(explanation, "the grand total (", grand_total,") is smaller than 5 times the number of cells (", 5 * num_cells, "), and the minimum expected count (", min_expected, ") is equal to or larger than 1, use the (N-1)/N adjusted Chi-Square test. Permutation or Monte Carlo method can also be considered")
       } else {
         explanation <- paste0(explanation, "the grand total (", grand_total,") is smaller than 5 times the number of cells (", 5 * num_cells, "), and the minimum expected count (", min_expected, ") is less than 1, use the Permutation or Monte Carlo method")
       }
@@ -44,10 +44,10 @@ suggest_chi_squared_method <- function(cross_tab) {
   } else { # Larger than 2x2
     explanation <- paste0(explanation, "Since the table is larger than 2x2, ")
     if (grand_total >= 5 * num_cells) {
-      explanation <- paste0(explanation, "and the grand total (", grand_total,") is equal to or larger than 5 times the number of cells (", 5 * num_cells, "), use the traditional Chi-squared test. Permutation or Monte Carlo method can also be considered")
+      explanation <- paste0(explanation, "and the grand total (", grand_total,") is equal to or larger than 5 times the number of cells (", 5 * num_cells, "), use the traditional Chi-Square test. Permutation or Monte Carlo method can also be considered")
     } else {
       if (min_expected >= 1) {
-        explanation <- paste0(explanation, "the grand total (", grand_total,") is smaller than 5 times the number of cells (", 5 * num_cells, "), and the minimum expected count (", min_expected, ") is equal to or larger than 1, use the (N-1)/N adjusted Chi-squared test. Permutation or Monte Carlo method can also be considered")
+        explanation <- paste0(explanation, "the grand total (", grand_total,") is smaller than 5 times the number of cells (", 5 * num_cells, "), and the minimum expected count (", min_expected, ") is equal to or larger than 1, use the (N-1)/N adjusted Chi-Square test. Permutation or Monte Carlo method can also be considered")
       } else {
         explanation <- paste0(explanation, "the grand total (", grand_total,") is smaller than 5 times the number of cells (", 5 * num_cells, "), and the minimum expected count (", min_expected, ") is less than 1, use the Permutation or Monte Carlo method")
       }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/chisquare.r
 \name{chisquare}
 \alias{chisquare}
-\title{R function for chi-square, (N-1) chi-square, and G-square test of independence, measures of association, and standardized/moment-corrected
+\title{R function for Chi-square, (N-1) Chi-square, and G-Square test of independence, power calculation, measures of association, and standardized/moment-corrected
 standardized/adjusted standardized residuals, visualisation of odds ratio in 2xk tables (where k >= 2)}
 \usage{
 chisquare(
@@ -12,11 +12,12 @@ chisquare(
   reference.level = 1,
   row.level = 1,
   or.alpha = 0.05,
+  power.alpha = 0.05,
   adj.alpha = FALSE,
   format = "short",
   graph = FALSE,
   oneplot = TRUE,
-  tfs = 14
+  tfs = 13
 )
 }
 \arguments{
@@ -34,8 +35,10 @@ The user must select the row level to which the calculation of the odds ratios m
 
 \item{or.alpha}{The significance level used for the odds ratios' confidence intervals (default: 0.05).}
 
+\item{power.alpha}{The significance level used for the calculation of the power of the traditional chi-square test (default: 0.05).}
+
 \item{adj.alpha}{Takes TRUE or FALSE (default) if the user wants or does not want the significance level of the
-residuals (standarized, adjusted standardized, and moment-corrected) to be corrected using the Sidak's adjustment method (see Details).}
+residuals (standardised, adjusted standardised, and moment-corrected) to be corrected using the Sidak's adjustment method (see Details).}
 
 \item{format}{Takes \emph{short} (default) if the dataset is a dataframe storing a contingency table; if the
 input dataset is a dataframe storing two columns that list the levels of the two categorical variables,
@@ -48,7 +51,7 @@ distribution of the chi-square statistic accross the number of simulated tables 
 \item{oneplot}{Takes TRUE (default) or FALSE if the user wants or does not want to render of the permutation and Monte Carlo
 distribution in the same plot.}
 
-\item{tfs}{Numerical value to set the size of the font used in the main body of the various output tables (14 by default).}
+\item{tfs}{Numerical value to set the size of the font used in the main body of the various output tables (13 by default).}
 }
 \value{
 The function produces \strong{optional charts} (distribution of the permuted chi-square statistic
@@ -85,14 +88,15 @@ Also, the function returns a \strong{list containing the following elements}:
       \item \emph{chisq.abs.contrib}: cells' absolute contribution (in percent) to the chi-square statistic.
       \item \emph{chisq.statistic}: observed chi-square value.
       \item \emph{chisq.p.value}: p value of the chi-square statistic.
+      \item \emph{chi.sq.power}: power of the traditional chi-square test.
+      \item \emph{chisq.adj}: chi-square statistic adjusted using the (N-1)/N correction.
+      \item \emph{chisq.adj.p.value}: p value of the adjusted chi-square statistic.
       \item \emph{chisq.p.value.perm}: permutation-based p value, based on B permuted tables.
       \item \emph{chisq.p.value.perm CI lower boundary}: lower boundary of the 95 percent CI around the permutation-based p value.
       \item \emph{chisq.p.value.perm CI upper boundary}: upper boundary of the 95 percent CI around the permutation-based p value.
       \item \emph{chisq.p.value.MC}: Monte Carlo p value, based on B random tables.
       \item \emph{chisq.p.value.MC CI lower boundary}: lower boundary of the 95 percent CI around the Monte Carlo p value.
       \item \emph{chisq.p.value.MC CI upper boundary}: upper boundary of the 95 percent CI around the Monte Carlo p value.
-      \item \emph{chisq.adj}: chi-square statistic adjusted using the (N-1)/N correction.
-      \item \emph{chisq.adj.p.value}: p value of the adjusted chi-square statistic.
     }
   \item \strong{G.square}:
     \itemize{
@@ -150,33 +154,34 @@ with the exception of the Monte Carlo p-value and its CI.\cr
 
 The \strong{following examples}, which use in-built datasets, can be run to familiarise with the function:\cr
 
--perform the test on the in-built 'social_class' dataset\cr
-result <- chisquare(social_class)\cr
+-perform the test on the in-built 'social_class' dataset:\cr
+\code{result <- chisquare(social_class)} \cr
 
--perform the test on a 2x2 subset of the 'diseases' dataset\cr
-mytable <- diseases[3:4,1:2]\cr
-result <- chisquare(mytable)\cr
+-perform the test on a 2x2 subset of the 'diseases' dataset:\cr
+\code{mytable <- diseases[3:4,1:2]} \cr
+\code{result <- chisquare(mytable)} \cr
 
--perform the test on a 2x2 subset of the 'safety' dataset\cr
-mytable <- safety[c(4,1),c(1,6)]\cr
-result <- chisquare(mytable)\cr
+-perform the test on a 2x2 subset of the 'safety' dataset:\cr
+\code{mytable <- safety[c(4,1),c(1,6)]} \cr
+\code{result <- chisquare(mytable)} \cr
 
--build a toy dataset in 'long' format (gender vs. opinion about death sentence)\cr
-mytable <- data.frame(GENDER=c(rep("F", 360), rep("M", 340)),\cr
-OPINION=c(rep("oppose", 235),\cr
-         rep("favour", 125),\cr
-         rep("oppose", 160),\cr
-         rep("favour", 180)))\cr
+-build a toy dataset in 'long' format (gender vs. opinion about death sentence):\cr
+\code{mytable <- data.frame(GENDER=c(rep("F", 360), rep("M", 340)),
+OPINION=c(rep("oppose", 235),
+         rep("favour", 125),
+         rep("oppose", 160),
+         rep("favour", 180)))}
 
--perform the test specifying that the input table is in 'long' format\cr
-result <- chisquare(mytable, format="long")\cr
+-perform the test specifying that the input table is in 'long' format:\cr
+\code{result <- chisquare(mytable, format="long")} \cr
 }
 \description{
 The function performs the chi-square test (both in its original format and in the N-1 version) and the G-square test of independence
-on the input contingency table. It also calculates various measures of categorical association, returns standardized, moment-corrected standardized,
-and adjusted standardized residuals (with indication of their significance), and calculates relative and absolute contributions to the chi-square.
-The p value associated to the chi-square statistic is also calculated via both a permutation- and a Monte Carlo-based method. The 95 percent confidence interval around those
-p values is also calculated. Nicely-formatted output tables are rendered. Optionally, in 2xk tables (where k >= 2), a plot of the odds ratios can be rendered.\cr
+on the input contingency table. It also calculates the power of the traditional chi-square test and various measures of categorical association,
+returns standardized, moment-corrected standardized, and adjusted standardized residuals (with indication of their significance),
+and calculates relative and absolute contributions to the chi-square. The p value associated to the chi-square statistic is also calculated via both
+a permutation- and a Monte Carlo-based method. The 95 percent confidence interval around those p values is also calculated.
+Nicely-formatted output tables are rendered. Optionally, in 2xk tables (where k >= 2), a plot of the odds ratios can be rendered.\cr
 Visit this \href{https://drive.google.com/file/d/1WxRUOpKUGcHW8OwMJLS_uy5QmLaCplCa/view?usp=sharing}{LINK} to access the package's vignette.\cr
 }
 \details{
@@ -218,7 +223,7 @@ where nr and nc are the number of rows and number of columns respectively, and m
 Essentially, the thresholds for a small, medium, and large effect are computed by dividing the Cohen's thresholds for a 2x2 table (df=1)
 by the square root of the input table's df.\cr
 
-Consider a V value of (say) 0.35; its effect size interpretation changes based on the table's dimensionality:\cr
+Consider a V value of (say) 0.35; its effect size interpretation changes based on the table's dimension:\cr
 
 for a 2x2 table, 0.35 corresponds to a "medium" effect;\cr
 for a 3x3 table, 0.35 still corresponds to a "medium" effect;\cr
@@ -227,12 +232,29 @@ for a 4x4 table, 0.35 corresponds to a "large" effect.\cr
 The examples illustrate that for the same (say) V value, the interpreted effect size can shift from "medium" in a smaller table to "large" in a larger table.
 In simpler terms, the threshold for determining a "large" effect, for instance, becomes more accessible to reach as the table's size increases.\cr
 
-It is crucial to be aware of this as it highlights that the same coefficient value can imply different magnitudes of effect depending on the table's dimensionality.\cr
+It is crucial to be aware of this as it highlights that the same coefficient value can imply different magnitudes of effect depending on the table's size\cr
 
 See: Cohen 1988; Sheskin 2011.
 
 
- \strong{Suggestion of a suitable chi-square testing method}\cr
+\strong{Power of the Traditional Chi-Square Test}\cr
+The function calculates the power of the traditional chi-square test, which is the probability of correctly rejecting the null
+hypothesis when it is false. The power is determined by the observed chi-square statistic, the sample size,
+and the degrees of freedom, without explicitly calculating an effect size, following the method described by Oyeyemi et al. 2010.
+
+The degrees of freedom are calculated as (number of rows - 1) * (number of columns - 1). The alpha level is set by default at 0.05
+and can be customized using the \code{power.alpha} parameter. The power is then estimated using the non-centrality parameter based
+on the observed chi-square statistic.
+
+The calculation involves determining the critical chi-squared value based on the alpha level and degrees of freedom, and then
+computing the probability that the chi-squared distribution with the given degrees of freedom exceeds this critical value.
+
+The resulting power value indicates how likely the test is to detect an effect if one exists. A power value close to 1 suggests a
+high probability of detecting a true effect, while a lower value indicates a higher risk of a Type II error. Typically, a power
+value of 0.8 or higher is considered robust in most research contexts.
+
+
+\strong{Suggestion of a suitable chi-square testing method}\cr
 The first rendered table includes a suggestion for the applicable chi-squared test method,
 derived from an internal analysis of the input contingency table. The decision logic used is as follows:\cr
 
@@ -455,12 +477,12 @@ features zeros along any of the diagonal, the \emph{Haldane-Anscombe} correction
 To better understand the rationale of plotting the odds ratios, consider the following example, which uses on the famous Titanic data:\cr
 
 Create a 2x3 contingency table:\cr
-mytable <- matrix(c(123, 158, 528, 200, 119, 181), nrow = 2, byrow = TRUE)\cr
-colnames(mytable) <- c("1st", "2nd", "3rd")\cr
-rownames(mytable) <- c("Died", "Survived")\cr
+\code{mytable <- matrix(c(123, 158, 528, 200, 119, 181), nrow = 2, byrow = TRUE)} \cr
+\code{colnames(mytable) <- c("1st", "2nd", "3rd")} \cr
+\code{rownames(mytable) <- c("Died", "Survived")} \cr
 
 Now, we perform the test and visualise the odds ratios:\cr
-chisquare(mytable, plot.or=TRUE, reference.level=1, row.level=1)\cr
+\code{chisquare(mytable, plot.or=TRUE, reference.level=1, row.level=1)} \cr
 
 In the rendered plot, we can see the odds ratios and confidence intervals for the second and third column level
 (i.e., 2nd class and 3rd class) because the first column level has been selected as reference level. The odds ratios are calculated
@@ -469,7 +491,7 @@ passengers on the 2nd class have 2.16 times larger odds of dying; passengers on 
 compared to the 1st class.\cr
 
 Note that if we set the \code{row.level} parameter to \code{2}, we make reference to the second row category, i.e. \emph{Survived}:\cr
-chisquare(mytable, plot.or=TRUE, reference.level=1, row.level=2)\cr
+\code{chisquare(mytable, plot.or=TRUE, reference.level=1, row.level=2)} \cr
 
 In the plot, we can see that passengers in the 2nd class have 0.46 times the odds of surviving of passengers in the 1st class, while
 passengers from the 3rd class have 0.21 times the odds of surviving of those travelling in the 1st class.\cr
@@ -547,12 +569,14 @@ Kvålseth, T. O. (2018a). An alternative to Cramér’s coefficient of associati
 Kvålseth, T. O. (2018b). Measuring association between nominal categorical variables: an alternative to the Goodman–Kruskal lambda. In Journal of Applied Statistics
 (Vol. 45, Issue 6, pp. 1118–1132).
 
+Oyeyemi, G. M., Adewara, A. A., Adebola, F. B., & Salau, S. I. (2010). On the Estimation of Power and Sample Size in Test of Independence.
+ In Asian Journal of Mathematics and Statistics (Vol. 3, Issue 3, pp. 139–146).
+
 Rasch, D., Kubinger, K. D., & Yanagida, T. (2011). Statistics in Psychology Using R and SPSS. Wiley.
 
 Reynolds, H. T. 1984. Analysis of Nominal Data (Quantitative Applications in the Social Sciences) (1st ed.). SAGE Publications.
 
 Rhoades, H. M., & Overall, J. E. (1982). A sample size correction for Pearson chi-square in 2×2 contingency tables. In Psychological Bulletin (Vol. 91, Issue 2, pp. 418–423).
-American Psychological Association (APA).
 
 Richardson, J. T. E. (2011). The analysis of 2 × 2 contingency tables-Yet again. In Statistics in Medicine (Vol. 30, Issue 8, pp. 890–890).
 
