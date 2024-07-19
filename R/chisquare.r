@@ -2,22 +2,28 @@
 #' standardized/adjusted standardized residuals, visualisation of odds ratio in 2xk tables (where k >= 2)
 #'
 #' @description The function performs the chi-square test (both in its original format and in the N-1 version) and the G-square test of independence
-#' on the input contingency table. It also calculates the power of the traditional chi-square test and various measures of categorical association,
-#' returns standardized, moment-corrected standardized, and adjusted standardized residuals (with indication of their significance),
-#' and calculates relative and absolute contributions to the chi-square. The p value associated to the chi-square statistic is also calculated via both
-#' a permutation- and a Monte Carlo-based method. The 95 percent confidence interval around those p values is also calculated.
+#' on the input contingency table. It also calculates the power of the traditional chi-square test and various measures of categorical association for tables of any size,
+#' returns standardised, moment-corrected standardised, adjusted standardised residuals (with indication of their significance), Quetelet Index,
+#' IJ association factor, adjusted standardised counts, and the chi-square-maximising version of the input table. It also calculates relative and absolute
+#' contributions to the chi-square statistic. The p value associated to the chi-square statistic
+#' is also computed via both a permutation- and a Monte Carlo-based method. The 95 percent confidence interval around those p values is also provided.
 #' Nicely-formatted output tables are rendered. Optionally, in 2xk tables (where k >= 2), a plot of the odds ratios can be rendered.\cr
 #' Visit this \href{https://drive.google.com/file/d/1WxRUOpKUGcHW8OwMJLS_uy5QmLaCplCa/view?usp=sharing}{LINK} to access the package's vignette.\cr
 #'
 #' @details The function produces the following \strong{measures of categorical associations}:
 #'  \itemize{
 #'   \item Phi (with indication of the magnitude of the effect size; only for 2x2 tables)
+#'   \item Phi max (used to compute Phi corrected; only for 2x2 tables)
 #'   \item Phi corrected (with indication of the magnitude of the effect size; only for 2x2 tables)
 #'   \item Phi signed (with indication of the magnitude of the effect size; only for 2x2 tables)
-#'   \item Yule's Q (only for 2x2 tables, includes p-value)
-#'   \item Odds ratio (only for 2x2 tables, includes 95perc confidence interval, p value, and indication of the magnitude of the effect size)
+#'   \item Yule's Q (only for 2x2 tables, includes p-value and indication of the magnitude of the effect size)
+#'   \item Yule's Y (only for 2x2 tables, includes p-value and indication of the magnitude of the effect size)
+#'   \item Odds ratio (for 2x2 tables, includes 95perc confidence interval, p value, and indication of the magnitude of the effect size)
+#'   \item Independent odds ratios (for tables larger than 2x2)
 #'   \item Adjusted contingency coefficient C (with indication of the magnitude of the effect size)
 #'   \item Cramer's V (with 95perc confidence interval; includes indication of the magnitude of the effect size)
+#'   \item Cramer's V corrected (with indication of the magnitude of the effect size)
+#'   \item Cramer's V standardised (with indication of the magnitude of the effect size)
 #'   \item Bias-corrected Cramer's V (with indication of the magnitude of the effect size)
 #'   \item Cohen's w (with indication of the magnitude of the effect size)
 #'   \item W coefficient (includes 95perc confidence interval and magnitude of the effect size)
@@ -26,40 +32,6 @@
 #'   \item Goodman-Kruskal's tau (asymmetric) and gamma (with p-value)
 #'   \item Cohen's k (with 95perc confidence interval)
 #' }
-#'
-#' \strong{Indication of the magnitude of the association as indicated by the coefficients}\cr
-#' The function provides indication of the mangitude of the association (effect size) for the Phi, Phi corrected, Phi signed, Cadj, Cramer's V, Cramer's V bias-corrected,
-#' Cohen's w, W, and for the Odds Ratio.\cr
-#'
-#' With the exception of the latter (for which see further down), the effect size for the other measures of association
-#' is based on Cohen 1988.\cr
-#'
-#' Phi, Phi corrected, Phi signed, and w are assessed against the well-known Cohen's classification
-#' scheme's thresholds (small 0.1, medium 0.3, large 0.5). For input cross-tabs larger than 2x2, the Cadj, V, V bias-corrected, and W coefficients
-#' are assessed against thresholds that depend on the table's df, which (as per Cohen 1988) correspond to the smaller between the rows and columns number,
-#' minus 1. On the basis of the table's df, the three thresholds are calculated as follows: \cr
-#'
-#' small effect: 0.100 / sqrt(min(nr,nc)-1)\cr
-#' medium effect: 0.300 / sqrt(min(nr,nc)-1)\cr
-#' large effect: 0.500 / sqrt(min(nr,nc)-1)\cr
-#'
-#' where nr and nc are the number of rows and number of columns respectively, and min(nr,nc)-1 corresponds to the table's df.
-#' Essentially, the thresholds for a small, medium, and large effect are computed by dividing the Cohen's thresholds for a 2x2 table (df=1)
-#' by the square root of the input table's df.\cr
-#'
-#' Consider a V value of (say) 0.35; its effect size interpretation changes based on the table's dimension:\cr
-#'
-#' for a 2x2 table, 0.35 corresponds to a "medium" effect;\cr
-#' for a 3x3 table, 0.35 still corresponds to a "medium" effect;\cr
-#' for a 4x4 table, 0.35 corresponds to a "large" effect.\cr
-#'
-#' The examples illustrate that for the same (say) V value, the interpreted effect size can shift from "medium" in a smaller table to "large" in a larger table.
-#' In simpler terms, the threshold for determining a "large" effect, for instance, becomes more accessible to reach as the table's size increases.\cr
-#'
-#' It is crucial to be aware of this as it highlights that the same coefficient value can imply different magnitudes of effect depending on the table's size\cr
-#'
-#' See: Cohen 1988; Sheskin 2011.
-#'
 #'
 #' \strong{Power of the Traditional Chi-Square Test}\cr
 #' The function calculates the power of the traditional chi-square test, which is the probability of correctly rejecting the null
@@ -104,15 +76,15 @@
 #' especially when considering the average expected frequency across all cells in the cross-tab, rather than
 #' the minimum expected value in any single cell. An average expected frequency of at least 5 across all
 #' cells of the input table should be sufficient for maintaining the chi-square test's reliability at the
-#' 0.05 significance level.\cr
+#' 0.05 significance level.
 #'
 #' As a consequence, a table's grand total equal to or larger than 5 times the number of cells should ensure the applicability
-#' of the traditional chi-square test (at alpha 0.05).\cr
+#' of the traditional chi-square test (at alpha 0.05).
 #'
-#' See: Roscoe-Byars 1971; Greenwood-Nikulin 1996; Zar 2014.\cr
+#' See: Roscoe-Byars 1971; Greenwood-Nikulin 1996; Zar 2014; Alberti 2024.
 #'
 #' For the rationale of the use of the (N-1)/N adjusted version of the chi-square test,
-#' and for the permutation and Monte Carlo method, see below.\cr
+#' and for the permutation and Monte Carlo method, see below.
 #'
 #'
 #' \strong{Chi-square statistics adjusted using the (N-1)/N adjustment}\cr
@@ -122,7 +94,7 @@
 #' or larger than 1. The corrected chi-square test proves more conservative when the sample size is small.
 #' As N increases, the term (N-1)/N approaches 1, making the adjusted chi-square value virtually equivalent to the unadjusted value.\cr
 #'
-#' See: Upton 1982; Rhoades-Overall1982; Campbel 2007; Richardson 2011. \cr
+#' See: Upton 1982; Rhoades-Overall 1982; Campbel 2007; Richardson 2011; Alberti 2024.
 #'
 #'
 #' \strong{Permutation-based and Monte Carlo p-value for the chi-square statistic}\cr
@@ -133,7 +105,7 @@
 #' As for the permutation method, the function does the following internally:\cr
 #' (1) Converts the input dataset to long format and expands to individual observations; \cr
 #' (2) Calculates the observed chi-squared statistic; \cr
-#' (3) Randomly shuffles (B times) the labels of the levels of one variable, and recalculates chi-squared statistic for each shuffled dataset;
+#' (3) Randomly shuffles (B times) the labels of the levels of one variable, and recalculates chi-squared statistic for each shuffled dataset;\cr
 #' (4) Computes the p-value based on the distribution of permuted statistics (see below).\cr
 #'
 #' For the rationale of the permutation-based approach, see for instance Agresti et al 2022.\cr
@@ -147,10 +119,10 @@
 #' \emph{chistat.simulated} is a vector storing the B chi-squared statistics generated under the Null Hypothesis, and\cr
 #' \emph{chisq.stat} is the observed chi-squared statistic.\cr
 #'
-#' Both distributions can be optionally plotted setting the \code{graph} parameter to \code{TRUE}.\cr
+#' Both distributions can be optionally plotted setting the \code{graph} parameter to \code{TRUE}.
 #'
 #'
-#'  \strong{Confidence interval around the permutation-based and Monte Carlo p-value}\cr
+#' \strong{Confidence interval around the permutation-based and Monte Carlo p-value}\cr
 #' The function calculates the 95 percent Confidence Interval around the simulated p-values.
 #' The Wald CI quantifies the uncertainty around the simulated p-value estimate. For a 95 percent CI,
 #' the standard z-value of 1.96 is used. The standard error for the estimated p-value is computed as the square root of
@@ -160,50 +132,10 @@
 #' Lower Confidence Interval = estimated p-value - (z-value * standard error)\cr
 #' Upper Confidence Interval = estimated p-value + (z-value * standard error)\cr
 #'
-#' Finally, the lower and upper CIs are clipped to lie within 0 and 1.\cr
+#' Finally, the lower and upper CIs are clipped to lie within 0 and 1.
 #'
 #' The implemented procedure aligns with the one described at this link:
-#' https://blogs.sas.com/content/iml/2015/10/28/simulation-exact-tables.html\cr
-#'
-#'
-#'
-#' \strong{Moment-corrected standardized residuals}\cr
-#' The moment-corrected standardized residuals are calculated as follows: \cr
-#'
-#' \eqn{stand.res / (sqrt((nr-1)*(nc-1)/(nr*nc)))}, where\cr
-#'
-#' \emph{stand.res} is each cell's standardized residual, \emph{nr} and
-#' \emph{nc} are the number of rows and columns respectively.\cr
-#'
-#' See Garcia-Perez-Nunez-Anton 2003: 827.\cr
-#'
-#'
-#' \strong{Adjusted standardized residuals}\cr
-#' The adjusted standardized residuals are calculated as follows: \cr
-#'
-#' \eqn{stand.res[i,j] / sqrt((1-sr[i]/n)*(1-sc[j]/n))}, where\cr
-#'
-#' \emph{stand.res} is the standardized residual for cell \emph{ij},
-#' \emph{sr} is the row sum for row \emph{i}, \emph{sc} is the column sum for column \emph{j}, and
-#' \emph{n} is the table grand total. The \emph{adjusted standardized residuals} should be used in place of
-#' the standardised residuals since the latter are not truly standarised because they have a nonunit variance. The
-#' standardised residuals therefore underestimate the divergence between the observed and the expected counts. The adjusted
-#' standardized residuals (and the moment-corrected ones) correct that deficiency.\cr
-#'
-#' For more info see: Haberman 1973.\cr
-#'
-#'
-#' \strong{Significance of the residuals}\cr
-#' The significance of the residuals (standardized, moment-corrected standardized, and adjusted standardized) is assessed using alpha 0.05 or, optionally
-#' (by setting the parameter \code{adj.alpha} to \code{TRUE}),
-#' using an adjusted alpha calculated using the Sidak's method:\cr
-#'
-#' \eqn{alpha.adj = 1-(1 - 0.05)^(1/(nr*nc))}, where\cr
-#'
-#' \emph{nr} and \emph{nc} are the number of rows and columns in the table respectively. The adjusted
-#' alpha is then converted into a critical two-tailed z value. \cr
-#'
-#' See: Beasley-Schumacker 1995: 86, 89.\cr
+#' https://blogs.sas.com/content/iml/2015/10/28/simulation-exact-tables.html
 #'
 #'
 #' \strong{Cells' relative contribution (in percent) to the chi-square statistic}\cr
@@ -227,21 +159,160 @@
 #' \emph{average contribution} is calculated as sum of all the absolute contributions divided by the number of cells in
 #' the table.\cr
 #'
-#' For both the relative and absolute contributions to the chi-square, see: Beasley-Schumacker 1995: 90.\cr
+#' For both the relative and absolute contributions to the chi-square, see: Beasley-Schumacker 1995: 90.
+#'
+#'
+#' \strong{Chi-square-maximising table}\cr
+#' The chi-square-maximising table is the version of the input cross-tab that, while preserving the marginal
+#' configuration, produces the largest divergence between the observed and the expected counts and, therefore,
+#' the maximum chi-squared value achievable given the observed marginals.
+#'
+#' The table is worked out using the routine described by Berry and colleagues. This allocation routine effectively
+#' maximises the chi-square statistic by concentrating (to the maximum extent possible given the marginals) the levels of
+#' one variable into specific levels of the other.
+#'
+#' As Berry and colleagues have noted, there can be alternative
+#' positions for the zeros in the chi-square-maximising table, but the obtained non-zero counts are the only
+#' ones that allow the maximisation of the chi-squared statistic.
+#'
+#' The chi-square-maximising table is used to compute the square root of the ratio
+#' between the observed chi-square and the maximum chi-square, which is equal to phi-corrected for 2x2 tables (see below), and to
+#' V-corrected for larger tables.
+#'
+#' On the chi-square-maximising table, see Berry et al. 2018.
+#'
+#'
+#' \strong{Moment-corrected standardized residuals}\cr
+#' The moment-corrected standardized residuals are calculated as follows: \cr
+#'
+#' \eqn{stand.res / (sqrt((nr-1)*(nc-1)/(nr*nc)))}, where\cr
+#'
+#' \emph{stand.res} is each cell's standardized residual, \emph{nr} and
+#' \emph{nc} are the number of rows and columns respectively.\cr
+#'
+#' See Garcia-Perez-Nunez-Anton 2003: 827.\cr
+#'
+#'
+#' \strong{Adjusted standardized residuals}\cr
+#' The adjusted standardized residuals are calculated as follows: \cr
+#'
+#' \eqn{stand.res[i,j] / sqrt((1-sr[i]/n)*(1-sc[j]/n))}, where\cr
+#'
+#' \emph{stand.res} is the standardized residual for cell \emph{ij},
+#' \emph{sr} is the row sum for row \emph{i}, \emph{sc} is the column sum for column \emph{j}, and
+#' \emph{n} is the table grand total. The \emph{adjusted standardized residuals} should be used in place of
+#' the standardised residuals since the latter are not truly standardised because they have a nonunit variance. The
+#' standardised residuals therefore underestimate the divergence between the observed and the expected counts. The adjusted
+#' standardized residuals (and the moment-corrected ones) correct that deficiency.\cr
+#'
+#' For more info see: Haberman 1973.
+#'
+#'
+#' \strong{Significance of the residuals}\cr
+#' The significance of the residuals (standardized, moment-corrected standardized, and adjusted standardized) is assessed using alpha 0.05 or, optionally
+#' (by setting the parameter \code{adj.alpha} to \code{TRUE}),
+#' using an adjusted alpha calculated using the Sidak's method:\cr
+#'
+#' \eqn{alpha.adj = 1-(1 - 0.05)^(1/(nr*nc))}, where\cr
+#'
+#' \emph{nr} and \emph{nc} are the number of rows and columns in the table respectively. The adjusted
+#' alpha is then converted into a critical two-tailed z value. \cr
+#'
+#' See: Beasley-Schumacker 1995: 86, 89.
+#'
+#'
+#' \strong{Quetelet Index and IJ association factor}\cr
+#' The Quetelet Index expresses the relative change in probability in one variable when considering
+#' the association with the other. The sign indicates the direction of the change, that is, whether the probability
+#' increases or decreases, compared to the probability expected under the hypothesis of independence. The IJ association factor
+#' is centred around 1.0 and represents the factor by which the probability in one variable changes when considering the association with the other.
+#' A decrease in probability is indicated by a factor smaller than 1.\cr
+#'
+#' The Quetelet index is computes as:\cr
+#'
+#' \eqn{(observed freq / expected freq) - 1}\cr
+#'
+#' The IJ association factor is computed as:\cr
+#'
+#' \eqn{observed freq / expected freq}\cr
+#'
+#' The thresholds for an IJ factor indicating a noteworthy change in probability, based on Agresti 2013, are: "larger than 2.0" and
+#' "smaller than 0.5". The thresholds for the Quetelet Index are based on those, and translate into "larger than 1.0" and "smaller than -0.50".
+#' For example, a Quetelet index greater than 1.0 indicates that the observed probability is more than double the expected probability under independence,
+#' corresponding to an increase of over 100 percent. Similarly, a Quetelet index less than -0.5 indicates that the observed probability is less than half the
+#' expected probability, corresponding to a substantial decrease of over 50 percent.
+#'
+#' For the Quetelet Index, see: Mirkin 2023.
+#'
+#' For the IJ association factor, see: Agresti 2013; Fagerland et al 2017. Note that
+#' the IJ association factor is called 'Pearson ratio' by Goodman 1996.
+#'
+#'
+#' \strong{Adjusted standardised counts}\cr
+#' The function computes adjusted standardised counts for a contingency table. It first standardises the counts via
+#' Iterative Proportional Fitting (see below) so that all row and column totals equal unity; then adjusts these
+#' standardised counts by subtracting the table's grand mean (that is, the grand total divided by the number of cells).
+#'
+#' The resulting adjusted standardised counts isolate the core association structure of the contingency table by removing
+#' the confounding effects of marginal distributions. This allows for meaningful comparisons across different
+#' tables, even when the original tables have different marginal totals.
+#'
+#' In the adjusted standardised counts, a value of 0 indicates independence between the row and column variables for that cell.
+#' Positive values indicate a higher association than expected under independence, while negative values
+#' indicate a lower association than expected.
+#'
+#' Unlike standardised residuals, these adjusted standardised counts can be directly compared across tables of
+#' the same size, making them particularly useful for comparative analyses across different samples, time periods, or contexts.
+#'
+#' It goes without saying that, in the process of table standardisation, any target marginals can be chosen.
+#' The choice of target values affects the scale of the standardised counts but not their relative relationships.
+#' By setting all the row and columns sums to unity, the function follows Rosenthal-Rosnow 2008.
+#'
+#' See: Fienberg 1971; Rosenthal-Rosnow 2008.
 #'
 #'
 #' \strong{Phi corrected}\cr
-#' To further refine Phi, a corrected version has been introduced. It accounts for the fact that the original coefficient (1)
-#' might not reach its maximum value of 1 even when there is a perfect association between the variables, and (2) it is not directly
-#' comparable across tables with different marginals. To calculate Phi-corrected, one first computes Phi-max, which represents the
-#' maximum possible value of Phi under the given marginal totals. Phi-corrected is equal to Phi/Phi-max. \cr
+#' To refine the phi coefficient, scholars have introduced a corrected version. It accounts for the fact that the original coefficient (1)
+#' does not always have a maximum achievable value of unity since it depends on the marginal configuration, and therefore (2) it is not directly
+#' comparable across tables with different marginals. To calculate phi-corrected, one first computes phi-max, which represents the
+#' maximum possible value of phi under the given marginal totals. phi-corrected is equal to phi/phi-max.
 #'
-#' For more details see: Cureton 1959; Liu 1980; Davenport et al. 1991; Rash et al. 2011.\cr
+#' For more details see: Cureton 1959; Liu 1980; Davenport et al. 1991; Rash et al. 2011; Alberti 2024.
+#'
+#' See also \emph{Chi-square-maximising table} above.
 #'
 #'
 #' \strong{95perc confidence interval around Cramer's V}\cr
 #' The calculation of the 95perc confidence interval around Cramer's V is based on Smithson 2003: 39-41, and builds on the R code made
-#' available by the author on the web (http://www.michaelsmithson.online/stats/CIstuff/CI.html).\cr
+#' available by the author on the web (http://www.michaelsmithson.online/stats/CIstuff/CI.html).
+#'
+#'
+#' \strong{Table standardisation via Iterative Proportional Fitting and Cramer's V standardised}\cr
+#' This version of the coefficient is computed on the standardised table, which is returned and rendered by the function.
+#' The \emph{standardised table} is internally obtained via
+#' the \emph{Iterative Proportional Fitting} routine described, for instance, in Reynold 1977: 32-33. Since a number of association measures,
+#' among which Cramer's V, are affected by the skewness in the marginal distributions, the original table is first standardised and
+#' then Cramer's V is computed.
+#'
+#' The rationale of the use of standardised tables as basis to compute Cramer's V is that coefficients calculated on standardised tables
+#' are comparable across tables because the impact of different marginal distributions is controlled for.
+#'
+#' The value obtained by subtracting the ratio Cramer's V to Cramer's V standardised from 1 gives an idea of the reduction of the magnitude of
+#' V due to the skewness of the marginal sums (multiplied by 100 can be interpreted as percentage reduction).
+#'
+#' The standardisation is performed so that the rows feature the same sums, and the columns
+#' features the same sum, while keeping the table's grand total unchanged. This removes the effect of skewed marginal distributions,
+#' while preserving the association structure of the original table.
+#'
+#' The target row and column marginals used in the standardisation process are set using the \code{marginal.type}, \code{custom.row.totals}, and
+#' \code{custom.col.totals} parameters.
+#'
+#' In the iterative procedure, the convergence to the established marginals is reached when the counts obtained
+#' in a given iteration do not differ from the ones obtained in the previous iteration by more than a threshold internally set to 0.001.
+#' The maximum number of iterations is internally set to 10,000 to prevent infinite loop; after that, the convergence is deemed as failed.
+#'
+#' For table standardisation as a preliminary step towards coefficients comparison across tables, see
+#' for example Smith 1976; Reynolds 1977; Liu 1980.
 #'
 #'
 #' \strong{Bias-corrected Cramer's V}\cr
@@ -254,51 +325,135 @@
 #' and expected frequencies. It uses the squared distance to adjust for the unevenness of the marginal distributions in the table.
 #' The indication of the magnitude of the association is based on Cohen 1988 (see above).
 #' Unlike Kvalseth 2018a, the calculation of the 95 percent confidence interval is based on a bootstrap approach (employing 10k resampled tables, and the 2.5th and 97.5th
-#' percentiles of the bootstrap distribution).\cr
+#' percentiles of the bootstrap distribution).
 #'
-#' For more details see: Kvalseth 2018a.\cr
+#' For more details see: Kvalseth 2018a.
+#'
+#'
+#' \strong{Indication of the magnitude of the association as indicated by the chi-squared-based coefficients}\cr
+#' The function provides indication of the magnitude of the association (effect size) for the phi, phi signed, phi corrected, Cadj, Cramer's V,
+#' V corrected, V standardised, V bias-corrected, Cohen's w, and W.
+#'
+#' The verbal articulation of the effect size is based on Cohen 1988.
+#'
+#' Phi, phi signed, phi corrected and w are assessed against the well-known Cohen's classification
+#' scheme's thresholds (small 0.1, medium 0.3, large 0.5). For input cross-tabs larger than 2x2, the Cadj, Cramer's V, V corrected, V standardised, V bias-corrected,
+#' and W coefficients are assessed against thresholds that depend on the table's df, which (as per Cohen 1988) correspond to the smaller between the
+#' rows and columns number, minus 1. On the basis of the table's df, the three thresholds are calculated as follows:
+#'
+#' small effect: 0.100 / sqrt(min(nr,nc)-1)\cr
+#' medium effect: 0.300 / sqrt(min(nr,nc)-1)\cr
+#' large effect: 0.500 / sqrt(min(nr,nc)-1)\cr
+#'
+#' where nr and nc are the number of rows and number of columns respectively, and min(nr,nc)-1 corresponds to the table's df.
+#' Essentially, the thresholds for a small, medium, and large effect are computed by dividing the Cohen's thresholds for a 2x2 table (df=1)
+#' by the square root of the input table's df.
+#'
+#' Consider a V value of (say) 0.350; its effect size interpretation changes based on the table's dimension:\cr
+#'
+#' for a 2x2 table, 0.350 corresponds to a "medium" effect;\cr
+#' for a 3x3 table, 0.350 still corresponds to a "medium" effect;\cr
+#' for a 4x4 table, 0.350 corresponds to a "large" effect.
+#'
+#' The examples illustrate that for the same (say) V value, the interpreted effect size can shift from "medium" in a smaller table to "large" in a larger table.
+#' In simpler terms, the threshold for determining a "large" effect, for instance, becomes more accessible to reach as the table's size increases.
+#'
+#' It is crucial to be aware of this as it highlights that the same coefficient value can imply different magnitudes of effect depending on the table's size.
+#'
+#' See: Cohen 1988; Sheskin 2011; Alberti 2024.
 #'
 #'
 #' \strong{Corrected Goodman-Kruskal's lambda}\cr
 #' The corrected Goodman-Kruskal's lambda adeptly addresses skewed or unbalanced marginal probabilities which create problems to the traditional lambda.
 #' By emphasizing categories with higher probabilities through a process of squaring maximum probabilities and normalizing with marginal probabilities, this refined
-#' coefficient addresses inherent limitations of lambda.\cr
+#' coefficient addresses inherent limitations of lambda.
 #'
-#' For more details see: Kvalseth 2018b.\cr
+#' For more details see: Kvalseth 2018b.
+#'
+#'
+#' \strong{Magnitude of the association as indicated by Yule's Q and Yule's Y}\cr
+#' Given the relationship between Q and Y and the odds ratio, the magnitude of the association indicated by Q and Y is based on the thresholds proposed by Ferguson 2009 for the
+#' odds ratio (see below). Specifically, the thresholds for Q (in terms of absolute value) are:
+#'
+#' \itemize{
+#'   \item |Q| < 0.330 - Negligible
+#'   \item 0.330 <= |Q| < 0.500 - Small
+#'   \item 0.500 <= |Q| < 0.600 - Medium
+#'   \item |Q| >= 0.600 - Large
+#' }
+#'
+#' For Yule's Y (absolute value):
+#'
+#'  \itemize{
+#'   \item |Y| < 0.171 - Negligible
+#'   \item 0.171 <= |Y| < 0.268 - Small
+#'   \item 0.268 <= |Y| < 0.333 - Medium
+#'   \item |Y| >= 0.333 - Large
+#' }
+#'
+#' Yule's Q has a probabilistic interpretation. It tells us how much more likely is to draw pairs of individuals who share the same characteristics
+#' (concordant pairs) as opposed to drawing pairs who do not (discordant pairs).
+#'
+#' Yule's Y represents the difference between the probabilities in the diagonal and off-diagonal cells, in the equivalent
+#' symmetric tables with equal marginals. In other words, Y measures the extent to which the probability of falling in the diagonal cells exceeds the probability
+#' of falling in the off-diagonal cells, in the standardised version of the table.
+#'
+#' On Yule's Q and Y, see Yule 1912.
+#'
+#' On Yule's Y, see also Reynolds 1977.
+#'
+#' On the probabilistic interpretation of Q, see: Davis 1971; Goodman-Kruskal 1979.
+#'
+#' On the sensitivity of Yule's Q and Pearson's phi to different types of associations, see Alberti 2024.
 #'
 #'
 #' \strong{Odds Ratio}\cr
-#' The odds ratio is calculated for 2x2 tables. In case of zeros along any of the table's diagonal,
-#' the \emph{Haldane-Anscombe} correction is applied. It consists in adding 0.5 to every cell of the table before calculating the odds ratio.
-#' For tables of size 2xk (where k >= 2), pairwise odds ratios can be plotted (along with their confidence interval) by
-#' setting the \code{or.alpha} parameter to \code{TRUE}. The mentioned correction
-#' is also applied to the calculation of those pairwise odds ratios (for more information on the plot, see further below).\cr
+#' For 2x2 tables, a single odds ratio is computed.
 #'
-#' For the Haldane-Anscombe correction see, for instance, Fleiss-Levin-Paik 2003: 102-103.\cr
+#' For tables larger than 2x2, independent odds ratios are computed for adjacent rows and columns, so representing
+#' the minimal set of ORs needed to describe all pairwise relationships in the contingency table.
+#'
+#' For tables of size 2xk (where k >= 2), pairwise odds ratios can be plotted (along with their confidence interval) by
+#' setting the \code{plor.or} parameter to \code{TRUE} (see the \emph{Odd Ratios plot} section further down).
+#'
+#' In all three scenarios, the \emph{Haldane-Anscombe correction} is applied when zeros are present along any of the table's diagonals.
+#' This correction consists of adding 0.5 to every cell of the relevant 2x2 subtable before calculating the odds ratio. This ensures:
+#'
+#' - For 2x2 tables: The correction is applied to the entire table if either diagonal contains a zero.\cr
+#' - For larger tables: The correction is applied to each 2x2 subtable used to calculate an independent odds ratio, if that subtable has a zero in either diagonal.\cr
+#' - For 2xk tables: The correction is applied to each pairwise comparison that involves a zero in either diagonal.
+#'
+#' On the Haldane-Anscombe correction, see: Fleiss et al 2003.
 #'
 #'
 #' \strong{Odds Ratio effect size magnitude}\cr
-#' The magnitude of the associaiton indicated by the odds ratio is based on the thresholds (and corresponding reciprocal)
-#' suggested by Chen et al 2010:\cr
+#' The magnitude of the association indicated by the odds ratio is based on the thresholds (and corresponding reciprocals)
+#' suggested by Ferguson 2009 (for other thresholds, see for instance Chen et al 2010):\cr
 #'
 #'  \itemize{
-#'   \item OR < 1.68 - Very small
-#'   \item 1.68 <= OR < 3.47 - Small
-#'   \item 3.47 <= OR < 6.71 - Medium
-#'   \item OR >= 6.71 - Large
+#'   \item OR < 2.0 - Negligible
+#'   \item 2.0 <= OR < 3.0 - Small
+#'   \item 3.0 <= OR < 4.0 - Medium
+#'   \item OR >= 4.0 - Large
 #' }
+#'
+#' As noted earlier, the effect size magnitude for Yule's Q and Yule's Y is based on the above odds ratio's thresholds.
 #'
 #'
 #' \strong{Odd Ratios plot}\cr
 #' For 2xk table, where k >= 2:\cr
 #' by setting the \code{plor.or} parameter to \code{TRUE}, a plot showing the odds ratios and their 95percent confidence interval will be rendered.
-#' The confidence level can be modified via the \code{or.alpha} parameter. The odds ratios are calculated for the column levels, and one of them
+#' The confidence level can be modified via the \code{or.alpha} parameter.
+#'
+#' The odds ratios are calculated for the column levels, and one of them
 #' is to be selected by the user as a reference for comparison via the \code{reference.level} parameter (set to 1 by default).
 #' Also, the user may want to select the row category to which the calculation of the odds ratios makes reference (using the \code{row.level} parameter,
-#' which is set to 1 by default). If any of the pairwisely-generated 2x2 tables on which the odds ratio is calculated
-#' features zeros along any of the diagonal, the \emph{Haldane-Anscombe} correction is applied (see above). \cr
+#' which is set to 1 by default).
 #'
-#' To better understand the rationale of plotting the odds ratios, consider the following example, which uses on the famous Titanic data:\cr
+#' As mentioned earlier, if any of the 2x2 subtables on which the odds ratio is calculated
+#' features zeros along any of the diagonal, the \emph{Haldane-Anscombe} correction is applied.
+#'
+#' To better understand the rationale of plotting the odds ratios, consider the following example, which uses on the famous Titanic data:
 #'
 #' Create a 2x3 contingency table:\cr
 #' \code{mytable <- matrix(c(123, 158, 528, 200, 119, 181), nrow = 2, byrow = TRUE)} \cr
@@ -312,17 +467,17 @@
 #' (i.e., 2nd class and 3rd class) because the first column level has been selected as reference level. The odds ratios are calculated
 #' making reference to the first row category (i.e., \emph{Died}). From the plot, we can see that, compared to the 1st class,
 #' passengers on the 2nd class have 2.16 times larger odds of dying; passengers on the 3rd class have 4.74 times larger odds of dying
-#' compared to the 1st class.\cr
+#' compared to the 1st class.
 #'
 #' Note that if we set the \code{row.level} parameter to \code{2}, we make reference to the second row category, i.e. \emph{Survived}:\cr
-#' \code{chisquare(mytable, plot.or=TRUE, reference.level=1, row.level=2)} \cr
+#' \code{chisquare(mytable, plot.or=TRUE, reference.level=1, row.level=2)}
 #'
 #' In the plot, we can see that passengers in the 2nd class have 0.46 times the odds of surviving of passengers in the 1st class, while
-#' passengers from the 3rd class have 0.21 times the odds of surviving of those travelling in the 1st class.\cr
+#' passengers from the 3rd class have 0.21 times the odds of surviving of those travelling in the 1st class.
 #'
 #'
 #' \strong{Other measures of categorical association}\cr
-#' For the other measures of categorical association provided by the function, see for example Sheskin 2011: 1415-1427.\cr
+#' For the other measures of categorical association provided by the function, see for example Sheskin 2011: 1415-1427.
 #'
 #'
 #' \strong{Additional notes on calculations}:
@@ -358,12 +513,17 @@
 #' @param power.alpha The significance level used for the calculation of the power of the traditional chi-square test (default: 0.05).
 #' @param adj.alpha  Takes TRUE or FALSE (default) if the user wants or does not want the significance level of the
 #' residuals (standardised, adjusted standardised, and moment-corrected) to be corrected using the Sidak's adjustment method (see Details).
+#' @param marginal.type Defines the target marginal sums used to table standardisation via Iterative Proportional Fitting.
+#' It takes \emph{average} (default) to have target row and column marginals equal to the table's grand total divided
+#' by the number of rows and columns, respectively; it takes \emph{percent} to have target marginals equal to fractions of a grand total set to 100.
+#' @param custom.row.totals A vector of numbers indicating the target row marginals (NULL by default).
+#' @param custom.col.totals A vector of numbers indicating the target column marginals (NULL by default).
 #' @param format Takes \emph{short} (default) if the dataset is a dataframe storing a contingency table; if the
 #' input dataset is a dataframe storing two columns that list the levels of the two categorical variables,
 #' \emph{long} will preliminarily cross-tabulate the levels of the categorical variable in the 1st column against
 #' the levels of the variable stored in the 2nd column.
 #' @param graph Takes TRUE or FALSE (default) if the user wants or does not want to plot the permutation and Monte Carlo
-#' distribution of the chi-square statistic accross the number of simulated tables set by the B parameter.
+#' distribution of the chi-square statistic across the number of simulated tables set by the B parameter.
 #' @param oneplot Takes TRUE (default) or FALSE if the user wants or does not want to render of the permutation and Monte Carlo
 #' distribution in the same plot.
 #' @param tfs Numerical value to set the size of the font used in the main body of the various output tables (13 by default).
@@ -381,9 +541,15 @@
 #'   \item Cells' relative contribution (in percent) to the chi-square statistic (cells in RED feature a larger-than-average
 #'   contribution)
 #'   \item Cells' absolute contribution (in percent) to the chi-square statistic (colour same as above)
+#'   \item Chi-square-maximising table (with indication of the associated chi-square value, that is, the maximum value
+#'   of the chi-square statistic achievable given the table margins)
 #'   \item Standardized residuals (RED for large significant residuals, BLUE for small significant residuals)
 #'   \item Moment-corrected standardized residuals (colour same as above)
 #'   \item Adjusted standardized residuals (colour same as above)
+#'   \item Table of independent odds ratios (for tables larger than 2x2)
+#'   \item Quetelet Indices
+#'   \item IJ association factors
+#'   \item Input contingency table standardised via Iterative Proportional Fitting
 #'   \item Table of output statistics, p values, and association measures
 #' }
 #'
@@ -392,6 +558,14 @@
 #'   \item \strong{input.table}:
 #'     \itemize{
 #'       \item \emph{crosstab}: input contingency table.
+#'     }
+#'     \item \strong{chi.sq.maxim.table}:
+#'     \itemize{
+#'       \item \emph{chi.sq.maximising.table}: chi-square-maximising table.
+#'     }
+#'   \item \strong{standardised.table}:
+#'     \itemize{
+#'       \item \emph{standard.table}: standardised table on which Cramer's V standardised is computed.
 #'     }
 #'   \item \strong{chi.sq.related.results}:
 #'     \itemize{
@@ -403,6 +577,7 @@
 #'       \item \emph{chisq.abs.contrib}: cells' absolute contribution (in percent) to the chi-square statistic.
 #'       \item \emph{chisq.statistic}: observed chi-square value.
 #'       \item \emph{chisq.p.value}: p value of the chi-square statistic.
+#'       \item \emph{chisq.max}: chi-square value computed on the chi-square-maximising table.
 #'       \item \emph{chi.sq.power}: power of the traditional chi-square test.
 #'       \item \emph{chisq.adj}: chi-square statistic adjusted using the (N-1)/N correction.
 #'       \item \emph{chisq.adj.p.value}: p value of the adjusted chi-square statistic.
@@ -418,21 +593,28 @@
 #'       \item \emph{Gsq.statistic}: observed G-square value.
 #'       \item \emph{Gsq.p.value}: p value of the G-square statistic.
 #'     }
-#'   \item \strong{residuals}:
+#'   \item \strong{post.hoc}:
 #'     \itemize{
 #'       \item \emph{stand.resid}: table of chi-square standardized residuals.
 #'       \item \emph{mom.corr.stand.resid}: table of moment-corrected standardized residuals.
 #'       \item \emph{adj.stand.resid}: table of adjusted standardized residuals.
+#'       \item \emph{Quetelet.Index}: table of Quetelet indices.
+#'       \item \emph{IJ.assoc.fact.}: table of IJ association factors.
+#'       \item \emph{adj.stand.counts}: table of adjusted standardised counts.
 #'     }
 #'   \item \strong{chi.sq.based.assoc.measures}:
 #'     \itemize{
+#'       \item \emph{Phi.signed}: signed Phi coefficient (only for 2x2 tables).
 #'       \item \emph{Phi}: Phi coefficient (only for 2x2 tables).
-#'       \item \emph{Phi corr}: corrected Phi coefficient (only for 2x2 tables).
-#'       \item \emph{Phi signed}: signed Phi coefficient (only for 2x2 tables).
+#'       \item \emph{Phi.max}: Phi max (only for 2x2 tables).
+#'       \item \emph{Phi.corr}: corrected Phi coefficient (equal to Phi/Phi max; only for 2x2 tables).
 #'       \item \emph{Cadj}: adjusted contingency coefficient C.
 #'       \item \emph{Cramer's V}: Cramer's V coefficient.
 #'       \item \emph{Cramer's V CI lower boundary}: lower boundary of the 95perc CI.
 #'       \item \emph{Cramer's V CI upper boundary}: upper boundary of the 95perc CI.
+#'       \item \emph{Cramer's V corr}: corrected V coefficient (equal to the square root of the ratio between the observed and the maximum chi-square value).
+#'       \item \emph{Cramer's V standard.}: Cramer's V computed on the standardised table.
+#'       \item \emph{1-(Cramer's V/V standard.)}: value indicating the reduction of the magnitude of V due to the skewness of the marginal sums.
 #'       \item \emph{Cramer's Vbc}: bias-corrected Cramer's V coefficient.
 #'       \item \emph{w}: Cohen's w.
 #'       \item \emph{W}: W coefficient.
@@ -443,10 +625,13 @@
 #'     \itemize{
 #'       \item \emph{Yule's Q}: Q coefficient (only for 2x2 tables).
 #'       \item \emph{Yule's Q p.value}: 2-tailed p value of Yule's Q.
-#'       \item \emph{Odds ratio}: odds ratio (only for 2x2 tables).
+#'       \item \emph{Yule's Y}: Y coefficient (only for 2x2 tables).
+#'       \item \emph{Yule's Y p.value}: 2-tailed p value of Yule's Y.
+#'       \item \emph{Odds ratio}: odds ratio (for 2x2 tables).
 #'       \item \emph{Odds ratio CI lower boundary}: lower boundary of the 95perc CI.
 #'       \item \emph{Odds ratio CI upper boundary}: upper boundary of the 95perc CI.
 #'       \item \emph{Odds ratio p.value}: p value of the odds ratio.
+#'       \item \emph{ORs}: table of independent odds ratios (for tables larger than 2x2).
 #'       \item \emph{lambda (rows dep.)}: Goodman-Kruskal's lambda coefficient (considering the rows being the dependent variable).
 #'       \item \emph{lambda (cols dep.)}: Goodman-Kruskal's lambda coefficient (considering the columns being the dependent variable).
 #'       \item \emph{lambda (symmetric)}: Goodman-Kruskal's symmetric lambda coefficient.
@@ -493,8 +678,11 @@
 #'
 #' @keywords chiperm
 #'
+#' @references Agresti, A. (2013). Categorical Data Analysis (3rd ed.). Wiley. ISBN 9780470463635.
 #'
 #' @references Agresti, A., Franklin, C., & Klingenberg, B. (2022). Statistics: The Art and Science of Learning from Data, (5th ed.). Pearson Education.
+#'
+#' @references Alberti, G. (2024). From Data to Insights: A Beginner's Guide to Cross-Tabulation Analysis. Routledge - CRC Press.
 #'
 #' @references Beh E.J., Lombardo R. 2014. Correspondence Analysis: Theory, Practice and New Strategies, Chichester, Wiley.
 #'
@@ -502,6 +690,8 @@
 #' The Journal of Experimental Education, 64(1).
 #'
 #' @references Bergsma, W. 2013. A bias correction for Cramér's V and Tschuprow's T. Journal of the Korean Statistical Society. 42 (3).
+#'
+#' @references Berry, K. J., Johnston, J. E., & Mielke, P. W., Jr. (2018). The Measurement of Association: A Permutation Statistical Approach. Springer.
 #'
 #' @references Campbell, I. (2007). Chi-squared and Fisher–Irwin tests of two-by-two tables with small sample recommendations.
 #' In Statistics in Medicine (Vol. 26, Issue 19, pp. 3661–3675).
@@ -516,9 +706,24 @@
 #' @references Davenport, E. C., Jr., & El-Sanhurry, N. A. (1991). Phi/Phimax: Review and Synthesis. In Educational and Psychological
 #' Measurement (Vol. 51, Issue 4, pp. 821–828).
 #'
+#' @references Davis, J. A. (1971). Elementary Survey Analysis. Prentice Hall. ISBN 9780132605472.
+#'
+#' @references Fagerland, M. W., Lydersen, S., & Laake, P. (2017). Statistical Analysis of Contingency Tables. CRC Press. ISBN 9781466588172.
+#'
+#' @references Ferguson, C. J. (2009). An effect size primer: A guide for clinicians and researchers. Professional Psychology:
+#' Research and Practice, 40(5), 532–538.
+#'
+#' @references Fienberg, S. E. (1971). A statistical technique for historians: Standardizing tables of counts. The Journal
+#' of Interdisciplinary History, 1(2), 305-315.
+#'
 #' @references Fleiss, J. L., Levin, B., & Paik, M. C. 2003. Statistical Methods for Rates and Proportions (3rd ed.). Wiley.
 #'
 #' @references Garcia-Perez, MA, and Nunez-Anton, V. 2003. Cellwise Residual Analysis in Two-Way Contingency Tables. Educational and Psychological Measurement, 63(5).
+#'
+#' @references Goodman, L. A. (1996). A Single General Method for the Analysis of Cross-Classified Data: Reconciliation and Synthesis of Some Methods of Pearson,
+#' Yule, and Fisher, and also Some Methods of Correspondence Analysis and Association Analysis. Journal of the American Statistical Association, 91(433), 408-428.
+#'
+#' @references Goodman, L. A., & Kruskal, W. H. (1979). Measures of Association for Cross Classifications. Springer-Verlag. ISBN 9780387904436.
 #'
 #' @references Greenwood, P. E., & Nikulin, M. S. (1996). A guide to chi-squared testing. John Wiley & Sons.
 #'
@@ -529,10 +734,18 @@
 #' @references Kvålseth, T. O. (2018b). Measuring association between nominal categorical variables: an alternative to the Goodman–Kruskal lambda. In Journal of Applied Statistics
 #' (Vol. 45, Issue 6, pp. 1118–1132).
 #'
+#' @references Liu, R (1980). A Note on Phi-Coefficient Comparison. In Research in Higher Education (Vol. 13, No. 1, pp. 3-8).
+#'
+#' @references Mirkin, B. (2023). A straightforward approach to chi-squared analysis of associations in contingency tables.
+#' In E. J. Beh, R. Lombardo, & J. G. Clavel (Eds.), Analysis of Categorical Data from Historical
+#' Perspectives (Behaviormetrics: Quantitative Approaches to Human Behavior, vol. 17). Springer.
+#'
 #' @references Oyeyemi, G. M., Adewara, A. A., Adebola, F. B., & Salau, S. I. (2010). On the Estimation of Power and Sample Size in Test of Independence.
 #'  In Asian Journal of Mathematics and Statistics (Vol. 3, Issue 3, pp. 139–146).
 #'
 #' @references Rasch, D., Kubinger, K. D., & Yanagida, T. (2011). Statistics in Psychology Using R and SPSS. Wiley.
+#'
+#' @references Reynolds, H. T. 1977. The Analysis of Cross-Classifications. New York: Free Press.
 #'
 #' @references Reynolds, H. T. 1984. Analysis of Nominal Data (Quantitative Applications in the Social Sciences) (1st ed.). SAGE Publications.
 #'
@@ -540,15 +753,21 @@
 #'
 #' @references Richardson, J. T. E. (2011). The analysis of 2 × 2 contingency tables-Yet again. In Statistics in Medicine (Vol. 30, Issue 8, pp. 890–890).
 #'
+#' @references Rosenthal, R., & Rosnow, R. L. (2008). Essentials of Behavioral Research: Methods and Data Analysis (3rd ed.). McGraw-Hill Higher Education.
+#'
 #' @references Roscoe, J. T., & Byars, J. A. (1971). An Investigation of the Restraints with Respect to Sample Size Commonly Imposed on the Use of the Chi-Square Statistic.
 #' Journal of the American Statistical Association, 66(336), 755–759.
 #'
 #' @references Sheskin, D. J. 2011. Handbook of Parametric and Nonparametric Statistical Procedures, Fifth Edition (5th ed.). Chapman and Hall/CRC.
 #'
+#' @references Smith, K. W. (1976). Marginal Standardization and Table Shrinking: Aids in the Traditional Analysis of Contingency Tables. Social Forces, 54(3), 669-693.
+#'
 #' @references Smithson M.J. 2003. Confidence Intervals, Quantitative Applications in the Social Sciences Series, No. 140. Thousand Oaks, CA: Sage.
 #'
 #' @references Upton, G. J. G. (1982). A Comparison of Alternative Tests for the 2 × 2 Comparative Trial. In Journal of the Royal Statistical Society.
 #' Series A (General) (Vol. 145, Issue 1, p. 86).
+#'
+#' @references Yule, G. U. (1912). On the methods of measuring association between two attributes. Journal of the Royal Statistical Society, 75(6), 579–652.
 #'
 #' @references Zar, J. H. (2014). Biostatistical analysis (5th ed.). Pearson New International Edition.
 #'
@@ -569,7 +788,10 @@
 #'
 #'
 #'
-chisquare <- function(data, B = 1000, plot.or= FALSE, reference.level = 1, row.level = 1, or.alpha = 0.05, power.alpha = 0.05, adj.alpha=FALSE, format="short", graph=FALSE, oneplot=TRUE, tfs=13){
+chisquare <- function(data, B = 1000, plot.or = FALSE, reference.level = 1, row.level = 1, or.alpha = 0.05,
+                      power.alpha = 0.05, adj.alpha = FALSE, marginal.type = "average",
+                      custom.row.totals = NULL, custom.col.totals = NULL, format = "short",
+                      graph = FALSE, oneplot = TRUE, tfs = 13){
   VALUE <- NULL
   df <- data
 
@@ -621,6 +843,12 @@ chisquare <- function(data, B = 1000, plot.or= FALSE, reference.level = 1, row.l
   #create a function to calculate the chi-sq statistic, to be also
   #used later on to calculate the simulated chi-sq statistic
   calc <- function(x){
+    # Re-calculate the grand total based on the current table;
+    # this is important because the function is also used to compute the chi-sq test
+    # on the standardised table, and its grand total may not correspond to the
+    # grand total of the original inputted table
+    n <- sum(x)
+
     #expected frequencies
     exp.freq <- round(outer(rowSums(x), colSums(x), "*")/n, 3)
 
@@ -769,13 +997,8 @@ chisquare <- function(data, B = 1000, plot.or= FALSE, reference.level = 1, row.l
     # calculate the phi.signed
     phi_signed <- round(((a*d)-(b*c)) / sqrt((a+b)*(c+d)*(a+c)*(b+d)),3)
 
-    # calculate phi.max
-    phi_max <- min(
-      c(
-        sqrt((a + b) * (b + d) / ((a + c) * (c + d))),
-        sqrt((a + c) * (c + d) / ((a + b) * (b + d)))
-      )
-    )
+    # calculate phi_max using the internal compute_phi_max() function
+    phi_max <- compute_phi_max(df)
 
     #calculate phi.corrected
     phi_corr <- round(phi / phi_max, 3)
@@ -801,6 +1024,7 @@ chisquare <- function(data, B = 1000, plot.or= FALSE, reference.level = 1, row.l
     phis <- calculate_phi(df)
     phi <- phis$phi
     phi.signed <- phis$phi_signed
+    phi.max <-  round(phis$phi_max,3)
     phi.corr <- phis$phi_corr
 
     # Get effect size labels
@@ -808,15 +1032,16 @@ chisquare <- function(data, B = 1000, plot.or= FALSE, reference.level = 1, row.l
     phi_signed_effect_size <- get_effect_size_label(abs(phi.signed))
     phi_corr_effect_size <- get_effect_size_label(abs(phi.corr))
 
-  } else {
-    phi <- "-"
-    phi.signed <- "-"
-    phi.corr <- "-"
-    # If phi coefficients aren't calculated, set their effect sizes to "-"
-    phi_effect_size <- ""
-    phi_signed_effect_size <- ""
-    phi_corr_effect_size <- ""
-  }
+} else {
+  phi <- "-"
+  phi.signed <- "-"
+  phi.max <- "-"
+  phi.corr <- "-"
+  # If phi coefficients aren't calculated, set their effect sizes to "-"
+  phi_effect_size <- ""
+  phi_signed_effect_size <- ""
+  phi_corr_effect_size <- ""
+}
 
 
   ##Yule's Q##
@@ -836,6 +1061,62 @@ chisquare <- function(data, B = 1000, plot.or= FALSE, reference.level = 1, row.l
     report.of.Q <- "-"
   }
 
+  if (nr == 2 & nc == 2) {
+  # Define thresholds for Yule's Q
+  Q_small <- 0.330
+  Q_medium <- 0.500
+  Q_large <- 0.600
+
+  # Use absolute value of Q to focus on magnitude only
+  abs_Q <- abs(Q)
+
+  # Define breakpoints and labels for effect sizes
+  breakpoints_Q <- c(-Inf, Q_small, Q_medium, Q_large, Inf)
+  labels_Q <- c("(negligible effect)", "(small effect)", "(medium effect)", "(large effect)")
+
+  # Use cut() function to categorize the effect size
+  Q.effect.size <- cut(abs_Q, breaks = breakpoints_Q, labels = labels_Q, include.lowest = TRUE)
+  } else {
+    Q.effect.size <- ""
+  }
+
+
+  ##Yule's Y##
+  if (nr==2 & nc==2) {
+    Y <- round((sqrt(df[1,1]*df[2,2]) - sqrt(df[1,2]*df[2,1])) / (sqrt(df[1,1]*df[2,2]) + sqrt(df[1,2]*df[2,1])), 3)
+    Y.z <- Y / sqrt((1/4)*(1-Y^2)^2*(1/df[1,1]+1/df[1,2]+1/df[2,1]+1/df[2,2]))
+    Y.p <- as.numeric(format(2*pnorm(q=abs(Y.z), lower.tail=FALSE), scientific=T))
+    Y.p.to.report <- ifelse(Y.p < 0.001, "< 0.001",
+                            ifelse(Y.p < 0.01, "< 0.01",
+                                   ifelse(Y.p < 0.05, "< 0.05",
+                                          round(Y.p, 3))))
+
+    report.of.Y <- paste0(Y, " (p: ", Y.p.to.report, ")")
+  } else {
+    Y <- "-"
+    Y.p <- "-"
+    report.of.Y <- "-"
+  }
+
+  if (nr == 2 & nc == 2) {
+  # Define thresholds for Yule's Y
+  Y_small <- 0.171
+  Y_medium <- 0.268
+  Y_large <- 0.333
+
+  # Use absolute value of Y to focus on magnitude only
+  abs_Y <- abs(Y)
+
+  # Define breakpoints and labels for effect sizes
+  breakpoints_Y <- c(-Inf, Y_small, Y_medium, Y_large, Inf)
+  labels_Y <- c("(negligible effect)", "(small effect)", "(medium effect)", "(large effect)")
+
+  # Use cut() function to categorize the effect size
+  Y.effect.size <- cut(abs_Y, breaks = breakpoints_Y, labels = labels_Y, include.lowest = TRUE)
+  } else {
+    Y.effect.size <- ""
+  }
+
 
   ##Define Cohen's thresholds to be used for C, V, Vbc, and W, on the basis of the table's df##
   Cohen_small <- 0.100 / sqrt(min(nr,nc)-1)
@@ -847,7 +1128,7 @@ chisquare <- function(data, B = 1000, plot.or= FALSE, reference.level = 1, row.l
   labels_Cohen <- c("(negligible effect)", "(small effect)", "(medium effect)", "(large effect)")
 
 
-  ##adjusted contingency coeffcient##
+  ##adjusted contingency coefficient##
   C <- sqrt(chisq.stat / (n + chisq.stat))
   Cmax <- sqrt((min(nr,nc)-1) / min(nr,nc))
   Cadj <- round(C / Cmax,3)
@@ -913,6 +1194,27 @@ chisquare <- function(data, B = 1000, plot.or= FALSE, reference.level = 1, row.l
 
   #create a vector to store the results to be later reported in the output table
   report.of.V <- paste0(V, " (95% CI ", V.lower,"-", V.upper, ")")
+
+
+  ##compute Cramer's V on the standardised input table##
+  # use the ancillary function to compute the standardised table
+  standardisation.res <- standardize_table(df, marginal.type = marginal.type, custom.row.totals = custom.row.totals, custom.col.totals = custom.col.totals)
+  table.stand <- standardisation.res$table.stand
+
+  # extract the iterations number to be used later on in the 'gt' table annotation
+  n.iterations <- standardisation.res$n.iterations
+
+  # compute the chi.sq statistic on the stand table in order to compute V on that table
+  chisq.stat.stand <- calc(table.stand)$chisq.stat
+
+  # calculate V on the standardised table
+  V.stand <- round(sqrt(chisq.stat.stand / (sum(table.stand) * min(nr-1, nc-1))), 3)
+
+  # Use the cut() function to determine the effect size
+  V.stand.effect.size <- cut(V.stand, breaks = breakpoints_Cohen, labels = labels_Cohen, right = FALSE)
+
+  # compute the ratio between V and Vstand
+  VtoV.stand <- round(1-(V/V.stand),3)
 
 
   ##bias-corrected Cramer's V##
@@ -1119,7 +1421,7 @@ chisquare <- function(data, B = 1000, plot.or= FALSE, reference.level = 1, row.l
   }
 
   #Define a function to calculate the effect-size for the odds ratio
-  #based on the thresholds suggested by Chen et al 2010.
+  #based on the thresholds suggested by Ferguson 2009.
   effect_size_from_OR <- function(OR) {
 
     # If the OR is less than 1, consider its reciprocal for categorization
@@ -1128,11 +1430,11 @@ chisquare <- function(data, B = 1000, plot.or= FALSE, reference.level = 1, row.l
     }
 
     # Check the OR value
-    if (OR < 1.68) {
-      return("very small effect")
-    } else if (OR >= 1.68 && OR < 3.47) {
+    if (OR < 2.0) {
+      return("negligible")
+    } else if (OR >= 2.0 && OR < 3.0) {
       return("small effect")
-    } else if (OR >= 3.47 && OR < 6.71) {
+    } else if (OR >= 3.0 && OR < 4.0) {
       return("medium effect")
     } else {
       return("large effect")
@@ -1149,6 +1451,15 @@ chisquare <- function(data, B = 1000, plot.or= FALSE, reference.level = 1, row.l
     or.effect.size.to.report <- paste0(" (", or.effect.size,")")
   }
 
+  ##Compute ORs for tables larger than 2x2
+  # Check if the table is 2x2
+  if (nr > 2 || nc > 2) {
+    ORs.table <- round(calculate_odds_ratios(df),3)
+    note.for.ORs <- "*Odds ratios are computed for adjacent rows and columns, representing the minimal set of odds ratios
+    needed to describe all pairwise relationships in the contingency table.*"
+  } else {
+    ORs.table <- "-"
+  }
 
   ##Cohen's k##
   sum.observed.diag <- sum(diag(as.matrix(df)))
@@ -1177,12 +1488,59 @@ chisquare <- function(data, B = 1000, plot.or= FALSE, reference.level = 1, row.l
   #with the values of the adjusted standardized residuals
   adj.stand.res <- stand.res
 
+
   ##adjusted standardized residuals##
   for (i in 1:nr) {
     for (j in 1:nc) {
       adj.stand.res[i,j] <- round(stand.res[i,j] / sqrt((1-sr[i]/n)*(1-sc[j]/n)), 3)
     }
   }
+
+
+  ##Quetelet Index##
+  QI <- round((df / exp.freq) - 1, 3)
+  #define a note to be used later on as annotation for the tables of Quetelet indices
+  note.for.QI <-  "*BLUE: noteworthy reduction in probability (< -0.50) <br> RED: noteworthy increase in probability (> 1.00)*"
+
+
+  ##IJ association factor##
+  IJ_factor <- round(df / exp.freq, 3)
+  note.for.IJ <-  "*BLUE: noteworthy reduction in probability (< 0.50) <br> RED: noteworthy increase in probability (> 2.00)*"
+
+
+  ##Adjusted Standardised Counts##
+  #compute the standardised table using the ancillary function with custom marginals (all set to unity)
+  standardisation.for.adj.counts <- standardize_table(df, marginal.type = NULL, custom.row.totals = rep(1, nr), custom.col.totals = rep(1 , nc))
+
+  #subtract the grand mean from the standardised counts
+  adj.stand.counts <- round(standardisation.for.adj.counts$table.stand - (sum(standardisation.for.adj.counts$table.stand)/(nr*nc)),3)
+
+  # extract the iterations number to be used later on in the 'gt' table annotation
+  adj.stand.counts.n.iterations <- standardisation.for.adj.counts$n.iterations
+
+  #define a note to be used as annotation
+  note.for.adj.stand.counts <-  paste0("*Standardisation converged at iteration number ", adj.stand.counts.n.iterations, ".*")
+
+
+  ##Chi-squares-maximising Table##
+  #use the ancillary function to get relevant data
+  chi.sq.max.data <- maximize_chi_squared(df)
+
+  #extract the chi-squares-maximising Table
+  chi.sq.max.table <- chi.sq.max.data$max_table
+
+  #extract the chi-squared value
+  chi.sq.max.stat <- round(chi.sq.max.data$chi_squared_max,3)
+
+  #compute the sqrt of the ratio between the observed chi2 and the max chi2
+  chisq.to.chisq.max <- round(sqrt(chisq.stat/chi.sq.max.stat),3)
+  V.corr <- chisq.to.chisq.max
+
+  # Use the cut() function to determine the effect size
+  V.corr.effect.size <- cut(V.corr, breaks = breakpoints_Cohen, labels = labels_Cohen, right = FALSE)
+
+  #define a note to be used later as annotation in the rendered table
+  note.for.chi.sq.max.table <-  paste0("*Chi-square value from the chi-square-maximising table: ", chi.sq.max.stat, ".*")
 
 
   ##cells' relative contribution in percent to the chi-sq##
@@ -1253,18 +1611,24 @@ chisquare <- function(data, B = 1000, plot.or= FALSE, reference.level = 1, row.l
   statistics <- c("Smallest expected count",
                   "Average expected count",
                   "Chi-Square Test",
+                  "Chi-Square Max",
                   "Chi-Square Test Power",
                   "Chi-Square Test (N-1)/N adjusted",
                   "Chi-Square Test Permutation p-value",
                   "Chi-Square Test Monte Carlo p-value",
                   "G-Square Test",
-                  paste("Phi ", phi_effect_size),
-                  paste("Phi corrected ", phi_corr_effect_size),
                   paste("Phi signed ", phi_signed_effect_size),
-                  "Yule's Q",
+                  paste("Phi ", phi_effect_size),
+                  "Phi max ",
+                  paste("Phi corrected ", phi_corr_effect_size),
+                  paste("Yule's Q", Q.effect.size),
+                  paste("Yule's Y", Y.effect.size),
                   paste("Odds ratio", or.effect.size.to.report),
                   paste("Cadj ", Cadj.effect.size),
                   paste("Cramer's V ", V.effect.size),
+                  paste("Cramer's V corrected", V.corr.effect.size),
+                  paste("Cramer's V standardised ", V.stand.effect.size),
+                  "1-(Cramer's V / Cramer's V stand.)",
                   paste("Cramer's V bias-corrected ", Vbc.effect.size),
                   paste("Cohen's w ", w_label),
                   paste("W ", W.effect.size),
@@ -1284,18 +1648,24 @@ chisquare <- function(data, B = 1000, plot.or= FALSE, reference.level = 1, row.l
   values.to.report <-c(round(min(exp.freq), 3),
                        avrg.expt.count,
                        paste0(chisq.stat, " (df: ", degrees.of.f, "; p: ", p.to.report, ")"),
+                       chi.sq.max.stat,
                        chi.sq.power.report,
                        paste0(chisq.adj, " (df: ", degrees.of.f, "; p: ", p.chisq.adj.to.report, ")"),
                        paste0(round(p.value.permut,3), "(95% CI ", round(lower_ci.perm,3), "-", round(upper_ci.perm,3), ")"),
                        paste0(round(p.uppertail,3), "(95% CI ", round(lower_ci,3), "-", round(upper_ci,3), ")"),
                        paste0(Gsquared, " (p: ", p.Gsquared.to.report, ")"),
-                       phi,
-                       phi.corr,
                        phi.signed,
+                       phi,
+                       phi.max,
+                       phi.corr,
                        report.of.Q,
+                       report.of.Y,
                        report.of.or,
                        Cadj,
                        report.of.V,
+                       V.corr,
+                       V.stand,
+                       VtoV.stand,
                        V.bc,
                        w,
                        report.of.W,
@@ -1335,22 +1705,29 @@ chisquare <- function(data, B = 1000, plot.or= FALSE, reference.level = 1, row.l
                                     title = gt::md("**Analysis report**"),
                                     subtitle = gt::md("*Observed frequencies*"))
   input.table.out <- gt::tab_source_note(input.table.out,
-                                         md(paste0("*Chi-Square Test: ", chisq.stat,
+                                         md(paste0("Chi-Square Test: ", chisq.stat,
                                                    " (df: ", degrees.of.f, "; p: ", p.to.report,")
                                                    <br> Chi-Square Test (N-1)/N adj: ", chisq.adj, "(df: ", degrees.of.f, "; p: ", p.chisq.adj.to.report, ")
                                                    <br> Chi-Square Test Permutation p-value: ", round(p.value.permut,3), " (95% CI: ", round(lower_ci.perm,3), "-",round(upper_ci.perm,3), ")
                                                    <br> Chi-Square Test Monte Carlo p-value: ", round(p.uppertail,3), " (95% CI: ", round(lower_ci,3), "-",round(upper_ci,3), ")
                                                    <br> G-Square Test: ", Gsquared," (p: ", p.Gsquared.to.report, ")
                                                    <br><br> Chi-Square Test Power: ", chi.sq.power.report, "
-                                                   <br><br> Cramer's V: ", report.of.V,
+                                                   <br><br> Yule's Q: ", report.of.Q,
+                                                   "<br> Yule's Y: ", report.of.Y,
+                                                   "<br> Odds Ratio: ", report.of.or,
+                                                   "<br><br> Cramer's V: ", report.of.V,
+                                                   "<br> Cramer's V corrected: ", V.corr,
+                                                   "<br> Cramer's V standardised: ", V.stand,
+                                                   "<br> 1-(Cramer's V / Cramer's V stand.): ", VtoV.stand,
                                                    "<br> W coefficient: ", report.of.W,
-                                                   "<br> Goodman-Kruskal's lambda corrected (symmetric): ", lambda.corrected.symm,
+                                                   "<br><br> Goodman-Kruskal's lambda (rows depedent): ", lambda.row.dep,
+                                                   "<br>Goodman-Kruskal's lambda (columns depedent): ", lambda.col.dep,
                                                    "<br> Goodman-Kruskal's gamma: ", gamma.coeff,
                                                    "<br><br> Number of cells with a significant standardized residual: ", sum(abs(stand.res) > z.crit.two.tailed),
                                                    "<br> Number of cells with a significant moment-corrected standardized residual: ", sum(abs(mom.corr.stand.res) > z.crit.two.tailed),
                                                    "<br> Number of cells with a significant adjusted standardized residual: ", sum(abs(adj.stand.res) > z.crit.two.tailed),
                                                    "<br> Significance of the residuals set at alpha ", round(alpha.adj,3), " (two-tailed z critical: ", round(z.crit.two.tailed,3), ")
-                                                   <br><br>", decision_method, ".*")))
+                                                   <br><br>*", decision_method, ".*")))
   input.table.out <- gt::tab_options(input.table.out, source_notes.font.size=10, table.font.size=tfs, table.width = gt::pct(100))
 
 
@@ -1410,6 +1787,18 @@ chisquare <- function(data, B = 1000, plot.or= FALSE, reference.level = 1, row.l
                                             columns = col.names.vect[i],
                                             rows = absolute.contrib.out$`_data`[[col.names.vect[i]]] >= average.abs.contr))
   }
+
+
+
+  #define the 'gt' elements for the output table of the chi-sqaured-maximising cross-tab
+  chi.sq.max.table.out <- as.data.frame(addmargins(as.matrix(chi.sq.max.table)))
+  chi.sq.max.table.out <- gt::gt(chi.sq.max.table.out, rownames_to_stub = T)
+  chi.sq.max.table.out <- gt::cols_align(chi.sq.max.table.out,align="center")
+  chi.sq.max.table.out <- gt::tab_header(chi.sq.max.table.out,
+                                         title = gt::md("**Analysis report**"),
+                                         subtitle = gt::md("*Chi-square-maximising table*"))
+  chi.sq.max.table.out <- gt::tab_source_note(chi.sq.max.table.out, md(note.for.chi.sq.max.table))
+  chi.sq.max.table.out <- gt::tab_options(chi.sq.max.table.out, table.font.size=tfs, source_notes.font.size=10, table.width = gt::pct(100))
 
 
   #define the 'gt' elements for the output table of the stand. residuals
@@ -1490,6 +1879,96 @@ chisquare <- function(data, B = 1000, plot.or= FALSE, reference.level = 1, row.l
   }
 
 
+  #define the 'gt' elements for the output table of the table of ORs
+  if (nr > 2 || nc > 2) {
+  ORs.out <- gt::gt(as.data.frame(ORs.table), rownames_to_stub = T)
+  ORs.out <- gt::cols_align(ORs.out,align="center")
+  ORs.out <- gt::tab_header(ORs.out,
+                           title = gt::md("**Analysis report**"),
+                           subtitle = gt::md("*Independent Odds Ratios*"))
+  ORs.out <- gt::tab_source_note(ORs.out, md(note.for.ORs))
+  ORs.out <- gt::tab_options(ORs.out, table.font.size=tfs, source_notes.font.size=10, table.width = gt::pct(100))
+  }
+
+
+  #define the 'gt' elements for the output table of the Quetelet Index
+  QI.out <- gt::gt(as.data.frame(QI), rownames_to_stub = T)
+  QI.out <- gt::cols_align(QI.out,align="center")
+  QI.out <- gt::tab_header(QI.out,
+                           title = gt::md("**Analysis report**"),
+                           subtitle = gt::md("*Quetelet Index*"))
+  QI.out <- gt::tab_source_note(QI.out, md(note.for.QI))
+  QI.out <- gt::tab_options(QI.out, table.font.size=tfs, source_notes.font.size=10, table.width = gt::pct(100))
+
+  for(i in seq_along(col.names.vect)) {
+    QI.out <- gt::tab_style(QI.out,
+                                       style = gt::cell_text(color="red"),
+                                       locations = gt::cells_body(
+                                         columns = col.names.vect[i],
+                                         rows = QI.out$`_data`[[col.names.vect[i]]] > 1.00))
+  }
+
+  for(i in seq_along(col.names.vect)) {
+    QI.out <- gt::tab_style(QI.out,
+                                       style = gt::cell_text(color="blue"),
+                                       locations = gt::cells_body(
+                                         columns = col.names.vect[i],
+                                         rows = QI.out$`_data`[[col.names.vect[i]]] < -0.50))
+  }
+
+
+
+  #define the 'gt' elements for the output table of the IJ association factor
+  IJ.out <- gt::gt(as.data.frame(IJ_factor), rownames_to_stub = T)
+  IJ.out <- gt::cols_align(IJ.out,align="center")
+  IJ.out <- gt::tab_header(IJ.out,
+                           title = gt::md("**Analysis report**"),
+                           subtitle = gt::md("*IJ association factor*"))
+  IJ.out <- gt::tab_source_note(IJ.out, md(note.for.IJ))
+  IJ.out <- gt::tab_options(IJ.out, table.font.size=tfs, source_notes.font.size=10, table.width = gt::pct(100))
+
+  for(i in seq_along(col.names.vect)) {
+    IJ.out <- gt::tab_style(IJ.out,
+                            style = gt::cell_text(color="red"),
+                            locations = gt::cells_body(
+                              columns = col.names.vect[i],
+                              rows = IJ.out$`_data`[[col.names.vect[i]]] > 2.00))
+  }
+
+  for(i in seq_along(col.names.vect)) {
+    IJ.out <- gt::tab_style(IJ.out,
+                            style = gt::cell_text(color="blue"),
+                            locations = gt::cells_body(
+                              columns = col.names.vect[i],
+                              rows = IJ.out$`_data`[[col.names.vect[i]]] < 0.50))
+  }
+
+
+  #define the 'gt' elements for the output table of the adjusted standardised counts
+  adj.std.counts.out <- gt::gt(as.data.frame(adj.stand.counts), rownames_to_stub = T)
+  adj.std.counts.out <- gt::cols_align(adj.std.counts.out,align="center")
+  adj.std.counts.out <- gt::tab_header(adj.std.counts.out,
+                           title = gt::md("**Analysis report**"),
+                           subtitle = gt::md("*Adjusted standardised counts*"))
+  adj.std.counts.out <- gt::tab_source_note(adj.std.counts.out, md(note.for.adj.stand.counts))
+  adj.std.counts.out <- gt::tab_options(adj.std.counts.out, table.font.size=tfs, source_notes.font.size=10, table.width = gt::pct(100))
+
+
+  #define the 'gt' elements for the output standardised table
+  stand.table.out <- as.data.frame(addmargins(as.matrix(round(table.stand,3))))
+  stand.table.out  <- gt::gt(stand.table.out, rownames_to_stub = T)
+  stand.table.out  <- gt::cols_align(stand.table.out,align="center")
+  stand.table.out  <- gt::tab_header(stand.table.out,
+                                    title = gt::md("**Analysis report**"),
+                                    subtitle = gt::md("*Table standardised via Iterative Proportional Fitting*"))
+
+  #define a note to be used as annotation
+  note.for.stand.table <-  paste0("*Standardisation converged at iteration number ", n.iterations, ".*")
+
+  stand.table.out <- gt::tab_source_note(stand.table.out, md(note.for.stand.table))
+  stand.table.out <- gt::tab_options(stand.table.out, table.font.size=tfs, source_notes.font.size=10, table.width = gt::pct(100))
+
+
   #define the 'gt' elements for the output table of the analysis' results
   report.out <- gt::gt(report.df)
 
@@ -1517,9 +1996,17 @@ chisquare <- function(data, B = 1000, plot.or= FALSE, reference.level = 1, row.l
   print(chisq.values.out)
   print(relative.contrib.out)
   print(absolute.contrib.out)
+  print(chi.sq.max.table.out)
   print(stand.res.out)
   print(mom.corr.stand.res.out)
   print(adj.stand.res.out)
+  if (nr > 2 || nc > 2) {
+    print(ORs.out)
+  }
+  print(QI.out)
+  print(IJ.out)
+  print(adj.std.counts.out)
+  print(stand.table.out)
   print(report.out)
 
 
@@ -1527,6 +2014,12 @@ chisquare <- function(data, B = 1000, plot.or= FALSE, reference.level = 1, row.l
   results <- list(
     input.table = list(
       "crosstab" = df
+    ),
+    chi.sq.maxim.table = list(
+      "chi.sq.maximising.table" = chi.sq.max.table
+    ),
+    standardised.table = list(
+      "standard.table" = round(table.stand,3)
     ),
     chi.sq.related.results = list(
       "exp.freq"=exp.freq,
@@ -1537,6 +2030,7 @@ chisquare <- function(data, B = 1000, plot.or= FALSE, reference.level = 1, row.l
       "chisq.abs.contrib"=absolute.contrib,
       "chisq.statistic"=chisq.stat,
       "chisq.p.value"=p,
+      "chisq.max"=chi.sq.max.stat,
       "chi.sq.power"=chi.sq.power,
       "chisq.adj"=chisq.adj,
       "chisq.adj.p.value"=p.chisq.adj,
@@ -1551,19 +2045,26 @@ chisquare <- function(data, B = 1000, plot.or= FALSE, reference.level = 1, row.l
       "Gsq.statistic"=Gsquared,
       "Gsq.p.value"=p.Gsquared
     ),
-    residuals = list(
+    post.hoc = list(
       "stand.resid"=stand.res,
       "mom.corr.stand.resid"=mom.corr.stand.res,
-      "adj.stand.resid"=adj.stand.res
+      "adj.stand.resid"=adj.stand.res,
+      "Quetelet.Index"=QI,
+      "IJ.assoc.fact."=IJ_factor,
+      "adj.stand.counts"=adj.stand.counts
     ),
     chi.sq.based.assoc.measures = list(
-      "Phi"=phi,
-      "Phi corr"=phi.corr,
       "Phi.signed"=phi.signed,
+      "Phi"=phi,
+      "Phi.max"=phi.max,
+      "Phi.corr"=phi.corr,
       "Cadj"=Cadj,
       "Cramer's V"=V,
       "Cramer's V CI lower boundary"=V.lower,
       "Cramer's V CI upper boundary"=V.upper,
+      "Cramer's V corr"=V.corr,
+      "Cramer's V standard."=V.stand,
+      "1-(Cramer's V / Cramer's V stand.)"=VtoV.stand,
       "Cramer's Vbc"=V.bc,
       "w"=w,
       "W"=W,
@@ -1573,10 +2074,13 @@ chisquare <- function(data, B = 1000, plot.or= FALSE, reference.level = 1, row.l
     non.chi.sq.based.assoc.measures = list(
       "Yule's Q"=Q,
       "Yule's Q p.value"=Q.p,
+      "Yule's Y"=Y,
+      "Yule's Y p.value"=Y.p,
       "Odds ratio"=or,
       "Odds ratio CI lower boundary"=or.lower.ci,
       "Odds ratio CI upper boundary"=or.upper.ci,
       "Odds ratio p.value"=or.p.value,
+      "ORs"=ORs.table,
       "lambda (rows dep.)"=lambda.row.dep,
       "lambda (cols dep.)"=lambda.col.dep,
       "lambda (symmetric)"=lambda,

@@ -1,4 +1,16 @@
-# chisquare 0.9
+# chisquare package history
+
+vers 0.9:
+
+* Calculation of the power of the traditional chi-square test added;
+* Parameter 'power.alpha' added to allow the user to set the alpha level used for the power calculation;
+* First and last rendered table updated to reflect the added power calculation;
+* In the first and last rendered table, the report of the (N-1)/N-corrected chi-square test has been moved up and placed right after the traditional chi-square test, and right before the report of the permuted and Monte Carlo version of the test;
+* Same as above for the list of results returned by the function;
+* The list of the returned results has been updated to report the power of the traditional chi-square test;
+* Default value of the 'tfs' parameter reduced to 13;
+* Fixes, improvements, and updates to the help documentation.
+
 
 vers 0.8:
 
@@ -38,6 +50,7 @@ these changes (following Sheskin 2011) allow to provide indication of effect siz
 
 
 vers 0.6
+
 * chi-square test adjusted by the (N-1)/N correction added;
 * magnitude of the effect size as indicated by the odds ratio added;
 * help documentation updated, and improved content-wise;
@@ -45,6 +58,7 @@ vers 0.6
 
 
 vers 0.5
+
 * the plot of odds ratios is now returned for cross-tabs featuring 2 rows and at least 2 columns;
 * to enhance consistency and clarity, the parameter 'row_category' has been renamed to 'row.level'; the parameter 'reference_level' has been renamed to 'reference.level'; 
 * Haldane-Anscombe correction added in the calculation of odds ratio;
@@ -53,12 +67,14 @@ vers 0.5
 
 
 vers 0.4
+
 * the facility to plot the odds ratios and 95% confidence intervals for table of size 2xk (where k>2) has been added;
 * the above added facility rests on a new internal function (visualize_odds_ratios);
 * amendments and updates to the help documentation.
 
 
 vers 0.3
+
 * Moment-corrected standardized residuals added;
 * 95% confidence interval for Cramer's V added; 
 * The output version of the input cross-tabulation now reports some essential analytical results in an annotation at the bottom of the table;
@@ -67,6 +83,7 @@ vers 0.3
 
 
 vers 0.2
+
 * Relative contributions to the chi-square added;
 * Contributions to the chi-square previously reported in ver_0.1 are now called absolute contribution;
 * Bibliographical reference added for the abovementioned contributions;
@@ -86,4 +103,5 @@ the Sidak's alpha adjustment method;
 
 
 vers 0.1
+
 first release to CRAN
