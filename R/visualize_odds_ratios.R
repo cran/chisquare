@@ -80,8 +80,8 @@ visualize_odds_ratios <- function(ctable, reference.level = 1, row.level = 1, or
 
   # Create the visualization
   plot(NULL, xlim = c(0.5, n_levels + 0.5), ylim = c(0, max(upper_bounds, na.rm = TRUE) * 1.2),
-       xlab = "", ylab = "Odds Ratios", xaxt = 'n', yaxt = 'n',
-       main = "Odds Ratios with 95% Confidence Intervals", cex.main = 0.85,
+       xlab = "", ylab = "Odds Ratio", xaxt = 'n', yaxt = 'n',
+       main = paste0("Odds Ratios with ", (1-or.alpha)*100,"% Confidence Intervals"), cex.main = 0.85,
        sub = paste0("The ORs are relative to the '", rc_name, "' row level",
                     "\nReference column level: '", level_names[reference.level], "'"),
        cex.sub = 0.6)

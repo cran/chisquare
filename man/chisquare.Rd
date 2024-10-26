@@ -2,8 +2,8 @@
 % Please edit documentation in R/chisquare.r
 \name{chisquare}
 \alias{chisquare}
-\title{R function for Chi-square, (N-1) Chi-square, and G-Square test of independence, power calculation, measures of association, and standardized/moment-corrected
-standardized/adjusted standardized residuals, visualisation of odds ratio in 2xk tables (where k >= 2)}
+\title{R function for Chi-square, (N-1) Chi-square, and G-Square test of independence, power calculation, measures of association, and standardised/moment-corrected
+standardised/adjusted standardised residuals, visualisation of odds ratio in 2xk tables (where k >= 2)}
 \usage{
 chisquare(
   data,
@@ -43,13 +43,13 @@ The user must select the row level to which the calculation of the odds ratios m
 \item{adj.alpha}{Takes TRUE or FALSE (default) if the user wants or does not want the significance level of the
 residuals (standardised, adjusted standardised, and moment-corrected) to be corrected using the Sidak's adjustment method (see Details).}
 
-\item{marginal.type}{Defines the target marginal sums used to table standardisation via Iterative Proportional Fitting.
+\item{marginal.type}{Defines the target marginal sums used for table standardisation via Iterative Proportional Fitting.
 It takes \emph{average} (default) to have target row and column marginals equal to the table's grand total divided
 by the number of rows and columns, respectively; it takes \emph{percent} to have target marginals equal to fractions of a grand total set to 100.}
 
-\item{custom.row.totals}{A vector of numbers indicating the target row marginals (NULL by default).}
+\item{custom.row.totals}{A vector of numbers indicating the target row marginals to be used for table standardisation via Iterative Proportional Fitting (NULL by default).}
 
-\item{custom.col.totals}{A vector of numbers indicating the target column marginals (NULL by default).}
+\item{custom.col.totals}{A vector of numbers indicating the target column marginals to be used for table standardisation via Iterative Proportional Fitting(NULL by default).}
 
 \item{format}{Takes \emph{short} (default) if the dataset is a dataframe storing a contingency table; if the
 input dataset is a dataframe storing two columns that list the levels of the two categorical variables,
@@ -79,12 +79,13 @@ The output tables are listed below:
   \item Cells' absolute contribution (in percent) to the chi-square statistic (colour same as above)
   \item Chi-square-maximising table (with indication of the associated chi-square value, that is, the maximum value
   of the chi-square statistic achievable given the table margins)
-  \item Standardized residuals (RED for large significant residuals, BLUE for small significant residuals)
-  \item Moment-corrected standardized residuals (colour same as above)
-  \item Adjusted standardized residuals (colour same as above)
+  \item Standardised residuals (RED for large significant residuals, BLUE for small significant residuals)
+  \item Moment-corrected standardised residuals (colour same as above)
+  \item Adjusted standardised residuals (colour same as above)
   \item Table of independent odds ratios (for tables larger than 2x2)
   \item Quetelet Indices
   \item IJ association factors
+  \item Adjusted standardised counts
   \item Input contingency table standardised via Iterative Proportional Fitting
   \item Table of output statistics, p values, and association measures
 }
@@ -114,7 +115,7 @@ Also, the function returns a \strong{list containing the following elements}:
       \item \emph{chisq.statistic}: observed chi-square value.
       \item \emph{chisq.p.value}: p value of the chi-square statistic.
       \item \emph{chisq.max}: chi-square value computed on the chi-square-maximising table.
-      \item \emph{chi.sq.power}: power of the traditional chi-square test.
+      \item \emph{chi.sq.power}: retrospective power of the traditional chi-square test.
       \item \emph{chisq.adj}: chi-square statistic adjusted using the (N-1)/N correction.
       \item \emph{chisq.adj.p.value}: p value of the adjusted chi-square statistic.
       \item \emph{chisq.p.value.perm}: permutation-based p value, based on B permuted tables.
@@ -131,24 +132,41 @@ Also, the function returns a \strong{list containing the following elements}:
     }
   \item \strong{post.hoc}:
     \itemize{
-      \item \emph{stand.resid}: table of chi-square standardized residuals.
-      \item \emph{mom.corr.stand.resid}: table of moment-corrected standardized residuals.
-      \item \emph{adj.stand.resid}: table of adjusted standardized residuals.
+      \item \emph{stand.resid}: table of chi-square standardised residuals.
+      \item \emph{mom.corr.stand.resid}: table of moment-corrected standardised residuals.
+      \item \emph{adj.stand.resid}: table of adjusted standardised residuals.
       \item \emph{Quetelet.Index}: table of Quetelet indices.
       \item \emph{IJ.assoc.fact.}: table of IJ association factors.
       \item \emph{adj.stand.counts}: table of adjusted standardised counts.
+    }
+    \item \strong{margin.free.assoc.measures}:
+    \itemize{
+      \item \emph{Yule's Q}: Q coefficient (only for 2x2 tables).
+      \item \emph{Yule's Q CI lower boundary}: lower boundary of the 95perc CI.
+      \item \emph{Yule's Q CI upper boundary}: upper boundary of the 95perc CI.
+      \item \emph{Yule's Q p.value}: 2-tailed p value of Yule's Q.
+      \item \emph{Yule's Y}: Y coefficient (only for 2x2 tables).
+      \item \emph{Yule's Y CI lower boundary}: lower boundary of the 95perc CI.
+      \item \emph{Yule's Y CI upper boundary}: upper boundary of the 95perc CI.
+      \item \emph{Yule's Y p.value}: 2-tailed p value of Yule's Y.
+      \item \emph{Odds ratio}: odds ratio (for 2x2 tables).
+      \item \emph{Odds ratio CI lower boundary}: lower boundary of the 95perc CI.
+      \item \emph{Odds ratio CI upper boundary}: upper boundary of the 95perc CI.
+      \item \emph{Odds ratio p.value}: p value of the odds ratio.
+      \item \emph{ORs}: table of independent odds ratios (for tables larger than 2x2).
     }
   \item \strong{chi.sq.based.assoc.measures}:
     \itemize{
       \item \emph{Phi.signed}: signed Phi coefficient (only for 2x2 tables).
       \item \emph{Phi}: Phi coefficient (only for 2x2 tables).
-      \item \emph{Phi.max}: Phi max (only for 2x2 tables).
+      \item \emph{Phi.max}: Maximum value of Phi given the marginals (only for 2x2 tables).
       \item \emph{Phi.corr}: corrected Phi coefficient (equal to Phi/Phi max; only for 2x2 tables).
       \item \emph{Cadj}: adjusted contingency coefficient C.
       \item \emph{Cramer's V}: Cramer's V coefficient.
       \item \emph{Cramer's V CI lower boundary}: lower boundary of the 95perc CI.
       \item \emph{Cramer's V CI upper boundary}: upper boundary of the 95perc CI.
-      \item \emph{Cramer's V corr}: corrected V coefficient (equal to the square root of the ratio between the observed and the maximum chi-square value).
+      \item \emph{Cramer's V max}: Maximum value of Cramer's V given the marginals.
+      \item \emph{Cramer's V corr}: corrected V coefficient (equal to V/Vmax; for tables of any size).
       \item \emph{Cramer's V standard.}: Cramer's V computed on the standardised table.
       \item \emph{1-(Cramer's V/V standard.)}: value indicating the reduction of the magnitude of V due to the skewness of the marginal sums.
       \item \emph{Cramer's Vbc}: bias-corrected Cramer's V coefficient.
@@ -157,17 +175,8 @@ Also, the function returns a \strong{list containing the following elements}:
       \item \emph{W CI lower boundary}: lower boundary of the 95perc CI.
       \item \emph{W CI upper boundary}: upper boundary of the 95perc CI.
     }
-  \item \strong{non.chi.sq.based.assoc.measures}:
+  \item \strong{PRE.assoc.measures}:
     \itemize{
-      \item \emph{Yule's Q}: Q coefficient (only for 2x2 tables).
-      \item \emph{Yule's Q p.value}: 2-tailed p value of Yule's Q.
-      \item \emph{Yule's Y}: Y coefficient (only for 2x2 tables).
-      \item \emph{Yule's Y p.value}: 2-tailed p value of Yule's Y.
-      \item \emph{Odds ratio}: odds ratio (for 2x2 tables).
-      \item \emph{Odds ratio CI lower boundary}: lower boundary of the 95perc CI.
-      \item \emph{Odds ratio CI upper boundary}: upper boundary of the 95perc CI.
-      \item \emph{Odds ratio p.value}: p value of the odds ratio.
-      \item \emph{ORs}: table of independent odds ratios (for tables larger than 2x2).
       \item \emph{lambda (rows dep.)}: Goodman-Kruskal's lambda coefficient (considering the rows being the dependent variable).
       \item \emph{lambda (cols dep.)}: Goodman-Kruskal's lambda coefficient (considering the columns being the dependent variable).
       \item \emph{lambda (symmetric)}: Goodman-Kruskal's symmetric lambda coefficient.
@@ -176,11 +185,6 @@ Also, the function returns a \strong{list containing the following elements}:
       \item \emph{lambda corrected (symmetric)}: corrected version of the symmetric lambda coefficient.
       \item \emph{tau (rows dep.)}: Goodman-Kruskal's tau coefficient (considering the rows being the dependent variable).
       \item \emph{tau (cols dep.)}: Goodman-Kruskal's tau coefficient (considering the columns being the dependent variable).
-      \item \emph{gamma}: Goodman-Kruskal's gamma coefficient.
-      \item \emph{gamma.p.value}: 2-sided p value for the Goodman-Kruskal's gamma coefficient.
-      \item \emph{k}: Cohen'k.
-      \item \emph{k CI lower boundary}: lower boundary of the 95perc CI.
-      \item \emph{k CI upper boundary}: upper boundary of the 95perc CI.
     }
 }
 
@@ -213,7 +217,7 @@ OPINION=c(rep("oppose", 235),
 }
 \description{
 The function performs the chi-square test (both in its original format and in the N-1 version) and the G-square test of independence
-on the input contingency table. It also calculates the power of the traditional chi-square test and various measures of categorical association for tables of any size,
+on the input contingency table. It also calculates the retrospective power of the traditional chi-square test and various measures of categorical association for tables of any size,
 returns standardised, moment-corrected standardised, adjusted standardised residuals (with indication of their significance), Quetelet Index,
 IJ association factor, adjusted standardised counts, and the chi-square-maximising version of the input table. It also calculates relative and absolute
 contributions to the chi-square statistic. The p value associated to the chi-square statistic
@@ -228,25 +232,25 @@ The function produces the following \strong{measures of categorical associations
   \item Phi max (used to compute Phi corrected; only for 2x2 tables)
   \item Phi corrected (with indication of the magnitude of the effect size; only for 2x2 tables)
   \item Phi signed (with indication of the magnitude of the effect size; only for 2x2 tables)
-  \item Yule's Q (only for 2x2 tables, includes p-value and indication of the magnitude of the effect size)
-  \item Yule's Y (only for 2x2 tables, includes p-value and indication of the magnitude of the effect size)
-  \item Odds ratio (for 2x2 tables, includes 95perc confidence interval, p value, and indication of the magnitude of the effect size)
+  \item Yule's Q (only for 2x2 tables, includes 95perc confidence interval, p-value, and indication of the magnitude of the effect)
+  \item Yule's Y (only for 2x2 tables, includes 95perc confidence interval, p-value and indication of the magnitude of the effect)
+  \item Odds ratio (for 2x2 tables, includes 95perc confidence interval, p value, and indication of the magnitude of the effect)
   \item Independent odds ratios (for tables larger than 2x2)
-  \item Adjusted contingency coefficient C (with indication of the magnitude of the effect size)
-  \item Cramer's V (with 95perc confidence interval; includes indication of the magnitude of the effect size)
-  \item Cramer's V corrected (with indication of the magnitude of the effect size)
-  \item Cramer's V standardised (with indication of the magnitude of the effect size)
-  \item Bias-corrected Cramer's V (with indication of the magnitude of the effect size)
-  \item Cohen's w (with indication of the magnitude of the effect size)
-  \item W coefficient (includes 95perc confidence interval and magnitude of the effect size)
+  \item Adjusted contingency coefficient C (with indication of the magnitude of the effect)
+  \item Cramer's V (with 95perc confidence interval; includes indication of the magnitude of the effect)
+  \item Cramer's V max (used to compute V corrected; for tables of any size)
+  \item Cramer's V corrected (with indication of the magnitude of the effect)
+  \item Cramer's V standardised (with indication of the magnitude of the effect)
+  \item Bias-corrected Cramer's V (with indication of the magnitude of the effect)
+  \item Cohen's w (with indication of the magnitude of the effect)
+  \item W coefficient (includes 95perc confidence interval and magnitude of the effect)
   \item Goodman-Kruskal's lambda (both asymmetric and symmetric)
   \item Corrected version of lambda (both asymmetric and symmetric)
-  \item Goodman-Kruskal's tau (asymmetric) and gamma (with p-value)
-  \item Cohen's k (with 95perc confidence interval)
+  \item Goodman-Kruskal's tau (asymmetric)
 }
 
-\strong{Power of the Traditional Chi-Square Test}\cr
-The function calculates the power of the traditional chi-square test, which is the probability of correctly rejecting the null
+\strong{Retrospective Power of the Traditional Chi-Square Test}\cr
+The function calculates the retrospective power of the traditional chi-square test, which is the probability of correctly rejecting the null
 hypothesis when it is false. The power is determined by the observed chi-square statistic, the sample size,
 and the degrees of freedom, without explicitly calculating an effect size, following the method described by Oyeyemi et al. 2010.
 
@@ -266,7 +270,7 @@ value of 0.8 or higher is considered robust in most research contexts.
 The first rendered table includes a suggestion for the applicable chi-squared test method,
 derived from an internal analysis of the input contingency table. The decision logic used is as follows:\cr
 
-For 2x2 Tables:\cr
+For 2x2 tables:\cr
 - if the grand total is equal to or larger than 5 times the number of cells,
   the traditional Chi-Square test is suggested. Permutation or Monte Carlo
   methods can also be considered.\cr
@@ -276,7 +280,7 @@ For 2x2 Tables:\cr
     suggested, with an option for Permutation or Monte Carlo methods.\cr
 (B) if it is less than 1, the Permutation or Monte Carlo method is recommended.\cr
 
-For Larger than 2x2 Tables:\cr
+For tables larger than 2x2:\cr
 - the logic is similar to that for 2x2 tables, with the same criteria for
   suggesting the traditional Chi-Square test, the (N-1)/N adjusted test,
   or the Permutation or Monte Carlo methods.\cr
@@ -349,6 +353,8 @@ Finally, the lower and upper CIs are clipped to lie within 0 and 1.
 The implemented procedure aligns with the one described at this link:
 https://blogs.sas.com/content/iml/2015/10/28/simulation-exact-tables.html
 
+For the Wald confidence interval see Fagerland et al 2017.
+
 
 \strong{Cells' relative contribution (in percent) to the chi-square statistic}\cr
 The cells' relative contribution (in percent) to the chi-square statistic is calculated as:\cr
@@ -387,41 +393,40 @@ As Berry and colleagues have noted, there can be alternative
 positions for the zeros in the chi-square-maximising table, but the obtained non-zero counts are the only
 ones that allow the maximisation of the chi-squared statistic.
 
-The chi-square-maximising table is used to compute the square root of the ratio
-between the observed chi-square and the maximum chi-square, which is equal to phi-corrected for 2x2 tables (see below), and to
-V-corrected for larger tables.
+The chi-square-maximising table is used to compute Cramer's V max, which is in turn used to compute
+Cramer's V corrected (equal to phi-corrected for 2x2 tables; see below).
 
 On the chi-square-maximising table, see Berry et al. 2018.
 
 
-\strong{Moment-corrected standardized residuals}\cr
-The moment-corrected standardized residuals are calculated as follows: \cr
+\strong{Moment-corrected standardised residuals}\cr
+The moment-corrected standardised residuals are calculated as follows: \cr
 
 \eqn{stand.res / (sqrt((nr-1)*(nc-1)/(nr*nc)))}, where\cr
 
-\emph{stand.res} is each cell's standardized residual, \emph{nr} and
+\emph{stand.res} is each cell's standardised residual, \emph{nr} and
 \emph{nc} are the number of rows and columns respectively.\cr
 
 See Garcia-Perez-Nunez-Anton 2003: 827.\cr
 
 
-\strong{Adjusted standardized residuals}\cr
-The adjusted standardized residuals are calculated as follows: \cr
+\strong{Adjusted standardised residuals}\cr
+The adjusted standardised residuals are calculated as follows: \cr
 
 \eqn{stand.res[i,j] / sqrt((1-sr[i]/n)*(1-sc[j]/n))}, where\cr
 
-\emph{stand.res} is the standardized residual for cell \emph{ij},
+\emph{stand.res} is the standardised residual for cell \emph{ij},
 \emph{sr} is the row sum for row \emph{i}, \emph{sc} is the column sum for column \emph{j}, and
-\emph{n} is the table grand total. The \emph{adjusted standardized residuals} should be used in place of
+\emph{n} is the table grand total. The \emph{adjusted standardised residuals} should be used in place of
 the standardised residuals since the latter are not truly standardised because they have a nonunit variance. The
 standardised residuals therefore underestimate the divergence between the observed and the expected counts. The adjusted
-standardized residuals (and the moment-corrected ones) correct that deficiency.\cr
+standardised residuals (and the moment-corrected ones) correct that deficiency.\cr
 
 For more info see: Haberman 1973.
 
 
 \strong{Significance of the residuals}\cr
-The significance of the residuals (standardized, moment-corrected standardized, and adjusted standardized) is assessed using alpha 0.05 or, optionally
+The significance of the residuals (standardised, moment-corrected standardised, and adjusted standardised) is assessed using alpha 0.05 or, optionally
 (by setting the parameter \code{adj.alpha} to \code{TRUE}),
 using an adjusted alpha calculated using the Sidak's method:\cr
 
@@ -461,7 +466,7 @@ the IJ association factor is called 'Pearson ratio' by Goodman 1996.
 
 
 \strong{Adjusted standardised counts}\cr
-The function computes adjusted standardised counts for a contingency table. It first standardises the counts via
+The function computes adjusted standardised counts for the input contingency table. It first standardises the counts via
 Iterative Proportional Fitting (see below) so that all row and column totals equal unity; then adjusts these
 standardised counts by subtracting the table's grand mean (that is, the grand total divided by the number of cells).
 
@@ -487,7 +492,7 @@ See: Fienberg 1971; Rosenthal-Rosnow 2008.
 To refine the phi coefficient, scholars have introduced a corrected version. It accounts for the fact that the original coefficient (1)
 does not always have a maximum achievable value of unity since it depends on the marginal configuration, and therefore (2) it is not directly
 comparable across tables with different marginals. To calculate phi-corrected, one first computes phi-max, which represents the
-maximum possible value of phi under the given marginal totals. phi-corrected is equal to phi/phi-max.
+maximum possible value of phi under the given marginal totals. Phi-corrected is equal to phi/phi-max.
 
 For more details see: Cureton 1959; Liu 1980; Davenport et al. 1991; Rash et al. 2011; Alberti 2024.
 
@@ -610,6 +615,10 @@ Yule's Y represents the difference between the probabilities in the diagonal and
 symmetric tables with equal marginals. In other words, Y measures the extent to which the probability of falling in the diagonal cells exceeds the probability
 of falling in the off-diagonal cells, in the standardised version of the table.
 
+Note that, if either cross-tab's diagonal features 0, the \emph{Haldane-Anscombe correction} is applied to both Q and Y.
+This results in a coefficient approaching, but not reaching, 1 in such circumstances, with the exact value depending
+on the table's frequencies. For more info on the correction, see the \emph{Odds Ratio} section below.
+
 On Yule's Q and Y, see Yule 1912.
 
 On Yule's Y, see also Reynolds 1977.
@@ -634,6 +643,8 @@ This correction consists of adding 0.5 to every cell of the relevant 2x2 subtabl
 - For 2x2 tables: The correction is applied to the entire table if either diagonal contains a zero.\cr
 - For larger tables: The correction is applied to each 2x2 subtable used to calculate an independent odds ratio, if that subtable has a zero in either diagonal.\cr
 - For 2xk tables: The correction is applied to each pairwise comparison that involves a zero in either diagonal.
+
+Note that, the \emph{Haldane-Anscombe correction} results in a finite (rather than infinite) odds ratio, with the exact value depending on the table's frequencies.
 
 On the Haldane-Anscombe correction, see: Fleiss et al 2003.
 
@@ -702,15 +713,10 @@ For the other measures of categorical association provided by the function, see 
   \item{\strong{Cohen's w} is calculated as \eqn{V * sqrt(min(nr, nc)-1)}, where \emph{V} is Cramer's V, and \emph{nr} and \emph{nc}
   are the number of rows and columns respectively; see Sheskin 2011: 679;}
 
-  \item{the \strong{2-tailed p value} of \strong{Goodman-Kruskal's gamma} is based on the
-  associated z-score calculated as per Sheskin 2011's equation 32.2;}
-
   \item{the \strong{symmetric} version of \strong{Goodman-Kruskal's lambda} is calculated
   as per Reynolds 1984: 55-57;}
 
-  \item{\strong{Goodman-Kruskal's tau} is calculated as per Reynolds 1984: 57-60;}
-
-  \item{\strong{Cohen's k} is calculated as per Sheskin 2011: 688-689 (equation 16.30).}
+  \item{\strong{Goodman-Kruskal's tau} is calculated as per Reynolds 1984: 57-60.}
 }
 }
 \examples{

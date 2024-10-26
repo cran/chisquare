@@ -1,7 +1,7 @@
-5fc6eff686ce85c704d626c42cb1681d *DESCRIPTION
+e573e061d77b770fdf48baf2d5e4c4b0 *DESCRIPTION
 9a574f29dc789906b2d89e0895718736 *NAMESPACE
-b7e5f159a009479c5d9917093f76065a *NEWS.md
-60a4cd8751f6d232f8aae75c82433c6f *R/chisquare.r
+c8e8d5aa67919b136085c36d5bdcb0d0 *NEWS.md
+aae9aab35eb5a5f953f3b0a8eefffcc7 *R/chisquare.r
 edcc681c23f9c814b6eae9f82b02edc6 *R/diseases.r
 83a4c0270904f3e39028aca6564d1499 *R/max_chisq.R
 aac2f4aae608d4d73df35319f4081c45 *R/multiple_ORs.R
@@ -10,13 +10,13 @@ e70ef311cbae457062ce9450480395d4 *R/safety.r
 7ad265d3f6a380b66226ed3b2b9d03ed *R/social_class.r
 049f9c6e41941c7e3a4b1da42250b19d *R/standardise_crosstabs.R
 c25a91aa09b82f34ea9af1cd50f330b7 *R/suggest_chi_squared_meth.R
-fa49b0679d51c633d99877ba1c956d83 *R/visualize_odds_ratios.R
-75d809ac693e65ff8571cb4ab05819ec *README.md
+38b00c6880114bc8d25491bf64a1e83c *R/visualize_odds_ratios.R
+13f6b6ac89b5bb1418c076358b083bdf *README.md
 90d0e2d0e38d52ee1ddf8021777781be *data/diseases.rda
 42f58ed96649e572d5e7da125bd51e1d *data/safety.rda
 a6c18644a489aac1a06fa032c6fbb099 *data/social_class.rda
 041654dbbcda3067900b295cd8ebd7ad *man/calculate_odds_ratios.Rd
-8b7b5178726b43b9c74f1cde5fcf2e29 *man/chisquare.Rd
+c57c9d791d3a3baefdbe0eb60e1a666c *man/chisquare.Rd
 5bccf85be210eb6c4246a79e56b14652 *man/compute_phi_max.Rd
 df8683b83db99d1228188d053f5ed9e7 *man/diseases.Rd
 02214dbef73578b687705e02d7379170 *man/maximize_chi_squared.Rd
