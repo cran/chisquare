@@ -720,13 +720,9 @@ For the other measures of categorical association provided by the function, see 
 }
 }
 \examples{
-# Perform the test on the in-built 'social_class' dataset
-result <- chisquare(social_class, B=99)
 
-
-# Perform the test on a 2x2 subset
-result <- chisquare(social_class[c(1:2), c(1:2)], B=99)
-
+# Perform the analysis on a 2x2 subset of the in-built 'social_class' dataset
+result <- chisquare(social_class[c(1:2), c(1:2)], B=9)
 
 
 }
