@@ -13,6 +13,7 @@
 # Function to calculate odds ratios using input table categories' labels or default labels if not provided;
 # The odds ratios are computed for adjacent rows and columns, so representing
 # the minimal set needed to describe all pairwise relationships in the contingency table.
+#
 calculate_odds_ratios <- function(freq_table) {
   # Check if the input is a matrix or data frame
   if(!is.matrix(freq_table) && !is.data.frame(freq_table)) {
